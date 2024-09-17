@@ -1,0 +1,68 @@
+﻿@using Newtonsoft.Json;
+@using RiotMatchData;
+@page "/player/{player}"
+
+<PageTitle>@player</PageTitle>
+
+@if (status == "loading")
+{
+    <h2>Loading...</h2>
+} else if (status == "error")
+{
+    <h2>@player not found!</h2>
+} else if (status == "done")
+{
+    <div class="top">
+        <h1 class="name">@player</h1>
+        <img src="/assets/roles/@(Utility.roleShort(stats.primaryRole)).webp" class="role" />
+        <a href="@opggLink()" target="_blank"><img src="/assets/opgg.webp" class="opgg" /></a>
+    </div>
+    <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills+stats.assists)/stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.winrate()%)</h3>
+    <h3>Most Recent Matches</h3>
+    <table>
+        @foreach (var serie in series.OrderByDescending(pair => pair.Value))
+        {
+            <tr>
+                <td><a href="/series/@serie.Value">@serie.Key</a></td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string? player { get; set; }
+
+    private PlayerOverallStats stats = new PlayerOverallStats();
+    private List<Participant> gameStats = new List<Participant>();
+    private List<KeyValuePair<string, int>> series = new();
+
+    private string status = "loading";
+
+    protected override Task OnInitializedAsync()
+    {
+        List<KeyValuePair<string, Participant>> playerData = Database.playerDataList(player, "all");
+        if (playerData.Count == 0)
+        {
+            status = "error";
+        } else
+        {
+            stats = new PlayerOverallStats(playerData);
+            foreach (var data in playerData)
+            {
+                gameStats.Add(data.Value);
+            }
+            series = Database.getSeriesForpuuid(stats.puuid);
+
+            status = "done";
+        }
+
+
+        return base.OnInitializedAsync();
+    }
+
+    private string opggLink()
+    {
+        return $"https://www.op.gg/summoners/na/{stats.name}-{stats.tag}";
+    }
+}

@@ -1,0 +1,178 @@
+﻿@page "/series/{seriesId}"
+@using RiotMatchData
+
+<PageTitle>@seriesTitle</PageTitle>
+
+<h2>@seriesTitle</h2>
+
+@if (status == "error")
+{
+    <h3>No Series Found</h3>
+} else  if (status == "loading")
+{
+    <h3>Loading Series Data...</h3>
+} else
+{
+    @foreach(var match in matchData)
+    {
+        <div>
+            <p class="GameTime">Game @gameCounter() - @Utility.GameLength(match.info.gameDuration)</p>
+            @foreach(var team in match.info.participants.GroupBy(x => x.teamId))
+            {
+                <div>
+                    <table class="team @teamStr(team.Key)">
+                        <tr>
+                            <th colspan="3">@teamName(team.ToList())</th>
+                        </tr>
+                        <tr>
+                            <th>Bans</th>
+                            <th>Total Gold</th>
+                            <th class="win">
+                                @if (match.info.teams.Find(x => x.teamId == team.Key).win)
+                                    {
+                                        <p>Winner</p>
+                                    } else
+                                    {
+                                        <p>Loser</p>
+                                    }
+                            </th>
+                        </tr>
+                        <tr>
+                            <td class="ban">
+                                @foreach (var ban in match.info.teams.Find(x => x.teamId == team.Key).bans)
+                                    {
+                                        <img src="@DataDragon.champIcon(ban.championId, seriesVersion)" title="@ban"/>
+                                    }
+                            </td>
+                            <td>
+                                @totalGold(team.ToList())
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="team @teamStr(team.Key)">
+                        <tr>
+                            <td><img src="assets/kills.webp" title="Kills" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.champion.kills</p></td>
+                            <td><img src="assets/turret.webp" title="Turrets" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.tower.kills</p></td>
+                            <td><img src="assets/dragon.webp" title="Dragons" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.dragon.kills</p></td>
+                            <td><img src="assets/grub.webp" title="Void Grubs" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.horde.kills</p></td>
+                            <td><img src="assets/herald.webp" title="Rift Herald" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.riftHerald.kills</p></td>
+                            <td><img src="assets/baron.webp" title="Barons" /><p class="CellContent">@match.info.teams.Find(x => x.teamId == team.Key).objectives.baron.kills</p></td>
+                        </tr>
+                    </table>
+                    <table class="team @teamStr(team.Key)">
+                        <tr class="header">
+                            <th colspan="3">Player</th>
+                            <th>CS</th>
+                            <th>KDA</th>
+                        </tr>
+                        @foreach (var player in orderTeam(team.ToList()))
+                        {
+                            <tr>
+                                <td class="player"><img src="@DataDragon.champIcon(player.championName, seriesVersion)" title="@player.championName" /><p class="CellContent"><a href="player/@player.riotIdGameName">@player.riotIdGameName</a></p></td>
+                                <td class="summoners"><img src="@DataDragon.summonerIcon(player.summoner1Id, seriesVersion)" /><img src="@DataDragon.summonerIcon(player.summoner2Id, seriesVersion)" /></td>
+                                <td class="items">
+                                    <img src="@DataDragon.itemIcon(player.item0, seriesVersion)" />
+                                    <img src="@DataDragon.itemIcon(player.item1, seriesVersion)" />
+                                    <img src="@DataDragon.itemIcon(player.item2, seriesVersion)" />
+                                    <img src="@DataDragon.itemIcon(player.item3, seriesVersion)" />
+                                    <img src="@DataDragon.itemIcon(player.item4, seriesVersion)" />
+                                    <img src="@DataDragon.itemIcon(player.item5, seriesVersion)" />
+                                    <p class="VisionScore" style="background-image: url(@DataDragon.itemIcon(player.item6, seriesVersion))">@player.visionScore</p>
+                                </td>
+                                <td class="cs"><p class="CellContent">@(player.totalMinionsKilled + player.neutralMinionsKilled)</p></td>
+                                <td class="kda">
+                                    <p class="CellContent">@player.kills/@player.deaths/@player.assists</p>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string? seriesId { get; set; }
+
+    private string status = "loading";
+    private string? seriesTitle;
+    private string? seriesVersion;
+    private List<RiotMatchData?> matchData;
+    private List<Participant>? players;
+    private int gameCount = 0;
+
+    protected override Task OnInitializedAsync()
+    {
+        seriesTitle = Database.SeriesTitle(seriesId);
+        matchData = Database.SeriesMatchData(seriesId);
+
+        if (seriesTitle == null || matchData.Count == 0)
+        {
+            status = "error";
+            seriesTitle = "error";
+        } else
+        {
+            seriesVersion = Utility.GameVersion(matchData[0].info.gameVersion);
+            players = matchData[0].info.participants;
+
+            status = "done";
+        }
+
+        return base.OnInitializedAsync();
+    }
+
+    private string gameCounter()
+    {
+        return (++gameCount).ToString();
+    }
+
+    private int totalGold(List<Participant> team)
+    {
+        int retval = 0;
+        foreach (var player in team)
+        {
+            retval += player.goldEarned;
+        }
+        return retval;
+    }
+
+    private string teamStr(int id)
+    {
+        if (id == 100)
+        {
+            return "blue";
+        } else {
+            return "red";
+        }
+    }
+
+    private string teamName(List<Participant> team)
+    {
+        Dictionary<string, int> teamNames = new();
+        foreach (var player in team)
+        {
+            var name = Database.playerTeamName(player.riotIdGameName);
+            if (teamNames.ContainsKey(name)) {
+                teamNames[name]++;
+            } else {
+                teamNames.Add(name, 0);
+            }
+        }
+        return teamNames.OrderByDescending(x => x.Value).First().Key;
+    }
+
+    private List<Participant> orderTeam(List<Participant> team)
+    {
+        List<Participant> retval = new();
+
+        retval.Add(team.Find(x => x.teamPosition == "TOP"));
+        retval.Add(team.Find(x => x.teamPosition == "JUNGLE"));
+        retval.Add(team.Find(x => x.teamPosition == "MIDDLE"));
+        retval.Add(team.Find(x => x.teamPosition == "BOTTOM"));
+        retval.Add(team.Find(x => x.teamPosition == "UTILITY"));
+
+        return retval;
+    }
+}

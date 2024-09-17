@@ -1,0 +1,51 @@
+﻿@page "/allseries/{season?}"
+
+<PageTitle>All Series</PageTitle>
+
+<h2>Season @season Series</h2>
+
+@if (status == "loading")
+{
+    <h3>Loading All Series...</h3>
+} else
+{
+    <h5>Season: <a href="/allseries/10">10</a></h5>
+    <h4>Most Recent First</h4>
+    <table>
+        @foreach(var serie in series)
+        {
+            <tr>
+                <td>
+                    <a href="/series/@serie[0]">Week @week(serie[0]) @serie[1] vs @serie[2]</a>
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string? season { get; set; }
+
+    private List<List<string>> series = new();
+    private string status = "loading";
+
+    protected override Task OnInitializedAsync()
+    {
+        if (season == null)
+        {
+            season = Utility.curSeason.ToString();
+        }
+
+        series = Database.getSeriesForSeason(season).OrderByDescending(x => x[0]).ToList();
+
+        status = "done";
+
+        return base.OnInitializedAsync();
+    }
+
+    private string week(string series)
+    {
+        return Int32.Parse(series.Substring(season.Length, 2)).ToString();
+    }
+}

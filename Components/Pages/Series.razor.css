@@ -1,0 +1,89 @@
+﻿table {
+    background-color: lightgray;
+    border: solid;
+    width: 35vw;
+    display: table;
+}
+
+div {
+    display: inline-block;
+}
+
+td {
+    padding-right: 10px;
+}
+
+td.win {
+    float: right;
+}
+
+td.ban {
+    width: 30%;
+}
+
+th {
+    border-bottom: solid;
+}
+
+table.blue {
+    margin-right: 1%;
+    border-color: #0094ff;
+}
+
+th.win {
+    text-align: right;
+    padding-right: 4px;
+}
+
+table.team td {
+    border-top: solid;
+}
+
+table.blue th {
+    color: #0094ff;
+}
+
+table.blue td {
+    border-color: #0094ff;
+}
+
+table.red {
+    margin-left: 1%;
+    border-color: #ff0000;
+}
+
+table.red th {
+    color: #ff0000;
+}
+
+table.red td {
+    border-color: #ff0000;
+}
+
+p.GameTime {
+    font-size: 2em;
+}
+
+p.CellContent {
+    float: left;
+    padding-top: 4px;
+    padding-left: 4px;
+}
+
+p.VisionScore {
+    width: 32px;
+    height: 32px;
+    background-size: 32px 32px;
+    float: left;
+    text-align: center;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    color: white;
+    margin: 0;
+    padding-top: 2px;
+}
+
+img {
+    width: 32px;
+    height: 32px;
+    float: left;
+}

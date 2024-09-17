@@ -1,0 +1,126 @@
+﻿@page "/Players/{season?}/{sort?}"
+
+<PageTitle>Players</PageTitle>
+
+<h1>Beer League Season @seasonStr()</h1>
+<h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a> - <a href="/players/9">9</a></h4>
+
+@if (status == "loading")
+{
+    <h2>Loading...</h2>
+} else if (status == "done")
+{
+    <table>
+        <tr class="top">
+            <th><a href="@sortLink("name")">Player</a></th>
+            <th><a href="@sortLink("winrate")">Win/Loss</a></th>
+            <th><a href="@sortLink("kills")">Kills</a></th>
+            <th><a href="@sortLink("deaths")">Deaths</a></th>
+            <th><a href="@sortLink("assists")">Assists</a></th>
+            <th><a href="@sortLink("role")">Main Role</a></th>
+        </tr>
+        @foreach (var player in AllPlayersStats)
+        {
+            var name = player.Key.Split("#");
+            var stats = player.Value;
+            var role = Utility.roleShort(stats.primaryRole);
+            <tr>
+                <td class="player"><a href="../Player/@name[0]">@name[0]</a></td>
+                <td class="winrate">@stats.winrate()%</td>
+                <td class="kills">@stats.kills</td>
+                <td class="deaths">@stats.deaths</td>
+                <td class="assists">@stats.assists</td>
+                <td class="role"><img src="/assets/roles/@(role).webp" title="@stats.primaryRole" /></td>
+            </tr>
+        }
+    </table>
+}
+
+
+@code {
+    [Parameter]
+    public string? sort { get; set; }
+
+    [Parameter]
+    public string? season { get; set; }
+
+    private string? order { get; set; }
+
+    private List<string> PlayersSorted = new List<string>();
+    private List<KeyValuePair<string, string>> AllPlayers = new List<KeyValuePair<string, string>>();
+    private List<KeyValuePair<string, PlayerOverallStats>> AllPlayersStats = new List<KeyValuePair<string, PlayerOverallStats>>();
+
+    private string status = "loading";
+
+    protected override Task OnInitializedAsync()
+    {
+        sort = sort ?? "name";
+        season = season ?? "all";
+
+        if (sort.Contains("-"))
+        {
+            var sortparams = sort.Split("-");
+            sort = sortparams[0];
+            order = sortparams[1];
+        }
+
+        AllPlayers = Database.ListPlayerNameId();
+        foreach (var player in AllPlayers)
+        {
+            var playerdatalist = Database.playerDataList(player.Key, season);
+            if (playerdatalist.Count != 0)
+            {
+                PlayerOverallStats playerOverallStats = new PlayerOverallStats(playerdatalist);
+                AllPlayersStats.Add(new KeyValuePair<string, PlayerOverallStats>(player.Key, playerOverallStats));
+            }
+        }
+
+        if (order == null || order == "asc") // ascending order
+        {
+            if (sort == "name") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Key).ToList(); }
+            else if (sort == "winrate") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.winrate()).ToList(); }
+            else if (sort == "kills") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.kills).ToList(); }
+            else if (sort == "deaths") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.deaths).ToList(); }
+            else if (sort == "assists") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.assists).ToList(); }
+            else if (sort == "role") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.primaryRole).ToList(); }
+        } else // descending order
+        {
+            if (sort == "name") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Key).ToList(); }
+            else if (sort == "winrate") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.winrate()).ToList(); }
+            else if (sort == "kills") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.kills).ToList(); }
+            else if (sort == "deaths") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.deaths).ToList(); }
+            else if (sort == "assists") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.assists).ToList(); }
+            else if (sort == "role") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.primaryRole).ToList(); }
+        }
+
+        status = "done";
+
+        return base.OnInitializedAsync();
+    }
+
+    private string sortLink (string header)
+    {
+        string returnval = $"/Players/{season}/{header}-";
+        if (header == sort)
+        {
+            if (order == "asc") { return returnval + "desc"; } else { return returnval + "asc"; }
+        } else
+        {
+            if (new string[] { "name", "role" }.Contains(header))
+            {
+                return returnval + "asc";
+            } else { return returnval + "desc"; }
+        }
+    }
+
+    private string seasonStr()
+    {
+        if (season == "all")
+        {
+            return "Overall";
+        } else
+        {
+            return season;
+        }
+    }
+}

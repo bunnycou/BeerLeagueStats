@@ -1,0 +1,49 @@
+﻿td a, th a {
+    display: block;
+    width: 100%;
+    color: black;
+    text-decoration: none;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 10px;
+}
+
+th {
+    font-size: 20px;
+}
+
+tr.top {
+    background-color: lightgray;
+}
+
+td.player {
+    font-weight: bold;
+    background-color: cornflowerblue;
+}
+
+td.winrate {
+    text-align: right;
+}
+
+td.kills {
+    text-align: right;
+}
+
+td.deaths {
+    text-align: center;
+}
+
+td.assists {
+    text-align: left;
+}
+
+td.role {
+    text-align: center;
+}
+
+img {
+    height: 24px;
+}
