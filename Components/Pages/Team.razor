@@ -16,60 +16,19 @@ else
     <h4>Season @season | @team.seriesWR()% (@team.seriesWin/@team.seriesLoss) Series WR | @team.matchWR()% (@team.matchWin/@team.matchLoss) Match WR</h4>
     <h5>Players</h5>
     <table>
-        @foreach (var player in playersByRole["top"])
+        @foreach (var role in roles)
         {
-            <tr>
-                <td>
-                    <a href="/player/@player">@player</a>
-                </td>
-                <td>
-                    <img src="/assets/roles/top.webp" class="role" />
-                </td>
-            </tr>
-        }
-        @foreach (var player in playersByRole["jg"])
-        {
-            <tr>
-                <td>
-                    <a href="/player/@player">@player</a>
-                </td>
-                <td>
-                    <img src="/assets/roles/jg.webp" class="role" />
-                </td>
-            </tr>
-        }
-        @foreach (var player in playersByRole["mid"])
-        {
-            <tr>
-                <td>
-                    <a href="/player/@player">@player</a>
-                </td>
-                <td>
-                    <img src="/assets/roles/mid.webp" class="role" />
-                </td>
-            </tr>
-        }
-        @foreach (var player in playersByRole["bot"])
-        {
-            <tr>
-                <td>
-                    <a href="/player/@player">@player</a>
-                </td>
-                <td>
-                    <img src="/assets/roles/bot.webp" class="role" />
-                </td>
-            </tr>
-        }
-        @foreach (var player in playersByRole["sup"])
-        {
-            <tr>
-                <td>
-                    <a href="/player/@player">@player</a>
-                </td>
-                <td>
-                    <img src="/assets/roles/sup.webp" class="role" />
-                </td>
-            </tr>
+            @foreach (var player in playersByRole[role])
+            {
+                <tr>
+                    <td>
+                        <a href="/player/@player[0]">@player[0]</a>
+                    </td>
+                    <td>
+                        <img src="/assets/roles/@(role).webp" class="role" />
+                    </td>
+                </tr>
+            }
         }
     </table>
     <br />
@@ -93,8 +52,10 @@ else
     public string season { get; set; }
 
     private List<List<string>> playerList = new(); // id, name, tag
-    private Dictionary<string, List<string>> playersByRole = new(); // Top[0]-Sup[4+] (subs are mixed in)
+    private Dictionary<string, List<List<string>>> playersByRole = new(); // Top[0]-Sup[4+] (subs are mixed in)
     private TeamData team;
+
+    string[] roles = { "top", "jg", "mid", "bot", "sup" };
 
     private string status = "loading";
 
@@ -105,7 +66,7 @@ else
         playerList = Database.dbquery("SELECT Players.puuid, Players.name, Players.tag FROM Players " +
             "INNER JOIN PlayerTeam ON PlayerTeam.puuid = Players.puuid " +
             "INNER JOIN Teams ON Teams.teamId = PlayerTeam.teamId " +
-            "WHERE Teams.abbreviation = '1IQ'");
+            $"WHERE Teams.abbreviation = '{teamAbbr}'");
         playersByRole = sortPlayerRoles();
 
         status = "done";
@@ -113,21 +74,22 @@ else
         return base.OnInitializedAsync();
     }
 
-    private Dictionary<string, List<string>> sortPlayerRoles()
+    private Dictionary<string, List<List<string>>> sortPlayerRoles()
     {
-        Dictionary<string, List<string>> roles = new();
-        roles.Add("top", new List<string>());
-        roles.Add("jg", new List<string>());
-        roles.Add("mid", new List<string>());
-        roles.Add("bot", new List<string>());
-        roles.Add("sup", new List<string>());
+        Dictionary<string, List<List<string>>> roles = new();
+        roles.Add("top", new List<List<string>>());
+        roles.Add("jg", new List<List<string>>());
+        roles.Add("mid", new List<List<string>>());
+        roles.Add("bot", new List<List<string>>());
+        roles.Add("sup", new List<List<string>>());
 
         foreach(var row in playerList)
         {
             var puuid = row[0];
             var name = row[1];
+            var tag = row[2];
 
-            roles[Utility.determineRole(puuid)].Add(name);
+            roles[Utility.determineRole(puuid)].Add(new List<string> { name, tag });
         }
 
         return roles;
@@ -135,15 +97,20 @@ else
 
     private string opggmulti()
     {
-    https://www.op.gg/multisearch/na?summoners=bunnycou%23bunny%2Cshtinkobob%236969
         var hash = "%23";
         var comma = "%2C";
 
         var url = "https://www.op.gg/multisearch/na?summoners=";
-        foreach (var player in playerList)
+
+        foreach (var role in roles) // this doesn't do anything but I am keeping it
         {
-            url += $"{player[1]}{hash}{player[2]}{comma}";
+            foreach (var player in playersByRole[role])
+            {
+                url += $"{player[0]}{hash}{player[1]}{comma}";
+            }
         }
+
+        
 
         return url.Substring(0, url.Length - 3);
     }
