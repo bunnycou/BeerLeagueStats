@@ -12,7 +12,7 @@
 }
 else
 {
-    <h3>@team.name</h3>
+    <h3>@team.name <a href="@opggmulti()" target="_blank"><img src="/assets/opgg.webp" /></a></h3>
     <h4>Season @season | @team.seriesWR()% (@team.seriesWin/@team.seriesLoss) Series WR | @team.matchWR()% (@team.matchWin/@team.matchLoss) Match WR</h4>
     <h5>Players</h5>
     <table>
@@ -92,7 +92,7 @@ else
     [Parameter]
     public string season { get; set; }
 
-    private List<List<string>> playerList = new(); // id, name
+    private List<List<string>> playerList = new(); // id, name, tag
     private Dictionary<string, List<string>> playersByRole = new(); // Top[0]-Sup[4+] (subs are mixed in)
     private TeamData team;
 
@@ -102,7 +102,7 @@ else
     {
         team = new TeamData(teamAbbr, season);
 
-        playerList = Database.dbquery("SELECT Players.puuid, Players.name FROM Players " +
+        playerList = Database.dbquery("SELECT Players.puuid, Players.name, Players.tag FROM Players " +
             "INNER JOIN PlayerTeam ON PlayerTeam.puuid = Players.puuid " +
             "INNER JOIN Teams ON Teams.teamId = PlayerTeam.teamId " +
             "WHERE Teams.abbreviation = '1IQ'");
@@ -131,5 +131,20 @@ else
         }
 
         return roles;
+    }
+
+    private string opggmulti()
+    {
+    https://www.op.gg/multisearch/na?summoners=bunnycou%23bunny%2Cshtinkobob%236969
+        var hash = "%23";
+        var comma = "%2C";
+
+        var url = "https://www.op.gg/multisearch/na?summoners=";
+        foreach (var player in playerList)
+        {
+            url += $"{player[1]}{hash}{player[2]}{comma}";
+        }
+
+        return url.Substring(0, url.Length - 3);
     }
 }
