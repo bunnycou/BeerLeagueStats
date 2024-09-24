@@ -1,4 +1,5 @@
 ﻿@page "/allseries/{season?}"
+@attribute [StreamRendering]
 
 <PageTitle>All Series</PageTitle>
 
@@ -16,7 +17,7 @@
         {
             <tr>
                 <td>
-                    <a href="/series/@serie[0]">Week @week(serie[0]) @serie[1] vs @serie[2]</a>
+                    <a href="/series/@serie[0]">@serie[1]</a>
                 </td>
             </tr>
         }
@@ -30,22 +31,20 @@
     private List<List<string>> series = new();
     private string status = "loading";
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(init);
+    }
+
+    private void init()
     {
         if (season == null)
         {
             season = Utility.curSeason.ToString();
         }
 
-        series = Database.getSeriesForSeason(season).OrderByDescending(x => x[0]).ToList();
+        series = Database.dbquery($"SELECT seriesId, title FROM Series WHERE seriesId LIKE '{season}%'").OrderByDescending(x => x[0]).ToList();
 
         status = "done";
-
-        return base.OnInitializedAsync();
-    }
-
-    private string week(string series)
-    {
-        return Int32.Parse(series.Substring(season.Length, 2)).ToString();
     }
 }

@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Components\Pages\Team.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Components\Pages\Team.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="wwwroot\assets\roles\bot.webp" />
     <None Include="wwwroot\assets\roles\jg.webp" />
     <None Include="wwwroot\assets\roles\mid.webp" />

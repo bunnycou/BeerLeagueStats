@@ -1,9 +1,10 @@
 ﻿@page "/Players/{season?}/{sort?}"
+@attribute [StreamRendering]
 
 <PageTitle>Players</PageTitle>
 
 <h1>Beer League Season @seasonStr()</h1>
-<h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a> - <a href="/players/9">9</a></h4>
+<h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a></h4>
 
 @if (status == "loading")
 {
@@ -46,13 +47,18 @@
 
     private string? order { get; set; }
 
-    private List<string> PlayersSorted = new List<string>();
-    private List<KeyValuePair<string, string>> AllPlayers = new List<KeyValuePair<string, string>>();
-    private List<KeyValuePair<string, PlayerOverallStats>> AllPlayersStats = new List<KeyValuePair<string, PlayerOverallStats>>();
+    private List<string> PlayersSorted = new();
+    private List<List<string>> AllPlayers = new();
+    private List<KeyValuePair<string, PlayerData>> AllPlayersStats = new();
 
     private string status = "loading";
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(init);
+    }
+
+    private void init()
     {
         sort = sort ?? "name";
         season = season ?? "all";
@@ -64,15 +70,15 @@
             order = sortparams[1];
         }
 
-        AllPlayers = Database.ListPlayerNameId();
+        AllPlayers = Database.dbquery("SELECT puuid, name FROM Players");
         foreach (var player in AllPlayers)
         {
-            var playerdatalist = Database.playerDataList(player.Key, season);
-            if (playerdatalist.Count != 0)
-            {
-                PlayerOverallStats playerOverallStats = new PlayerOverallStats(playerdatalist);
-                AllPlayersStats.Add(new KeyValuePair<string, PlayerOverallStats>(player.Key, playerOverallStats));
-            }
+            var puuid = player[0];
+            var name = player[1];
+
+            List<string> playerdatalist = Database.oneDimList(Database.dbquery($"SELECT participantData FROM PlayerChampMatch WHERE puuid = '{puuid}'"));
+            PlayerData playerOverallStats = new PlayerData(playerdatalist);
+            AllPlayersStats.Add(new KeyValuePair<string, PlayerData>(name, playerOverallStats));
         }
 
         if (order == null || order == "asc") // ascending order
@@ -83,7 +89,8 @@
             else if (sort == "deaths") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.deaths).ToList(); }
             else if (sort == "assists") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.assists).ToList(); }
             else if (sort == "role") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.primaryRole).ToList(); }
-        } else // descending order
+        }
+        else // descending order
         {
             if (sort == "name") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Key).ToList(); }
             else if (sort == "winrate") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.winrate()).ToList(); }
@@ -94,8 +101,6 @@
         }
 
         status = "done";
-
-        return base.OnInitializedAsync();
     }
 
     private string sortLink (string header)

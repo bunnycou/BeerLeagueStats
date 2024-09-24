@@ -1,0 +1,135 @@
+﻿@page "/team/{season}/{teamAbbr}"
+@using RiotMatchData
+
+<PageTitle>@teamAbbr</PageTitle>
+
+@if (status == "loading")
+{
+    <h4>Loading...</h4>
+} else if (status == "error")
+{
+    <h4>Error</h4>
+}
+else
+{
+    <h3>@team.name</h3>
+    <h4>Season @season | @team.seriesWR()% (@team.seriesWin/@team.seriesLoss) Series WR | @team.matchWR()% (@team.matchWin/@team.matchLoss) Match WR</h4>
+    <h5>Players</h5>
+    <table>
+        @foreach (var player in playersByRole["top"])
+        {
+            <tr>
+                <td>
+                    <a href="/player/@player">@player</a>
+                </td>
+                <td>
+                    <img src="/assets/roles/top.webp" class="role" />
+                </td>
+            </tr>
+        }
+        @foreach (var player in playersByRole["jg"])
+        {
+            <tr>
+                <td>
+                    <a href="/player/@player">@player</a>
+                </td>
+                <td>
+                    <img src="/assets/roles/jg.webp" class="role" />
+                </td>
+            </tr>
+        }
+        @foreach (var player in playersByRole["mid"])
+        {
+            <tr>
+                <td>
+                    <a href="/player/@player">@player</a>
+                </td>
+                <td>
+                    <img src="/assets/roles/mid.webp" class="role" />
+                </td>
+            </tr>
+        }
+        @foreach (var player in playersByRole["bot"])
+        {
+            <tr>
+                <td>
+                    <a href="/player/@player">@player</a>
+                </td>
+                <td>
+                    <img src="/assets/roles/bot.webp" class="role" />
+                </td>
+            </tr>
+        }
+        @foreach (var player in playersByRole["sup"])
+        {
+            <tr>
+                <td>
+                    <a href="/player/@player">@player</a>
+                </td>
+                <td>
+                    <img src="/assets/roles/sup.webp" class="role" />
+                </td>
+            </tr>
+        }
+    </table>
+    <br />
+    <h5>Recent Series</h5>
+    <table>
+        @foreach (var series in team.seriesList.OrderByDescending(x => x[0]))
+        {
+            <tr>
+                <td class="@series[2]">
+                    <a href="/series/@series[0]">@series[1]</a>
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string teamAbbr { get; set; }
+    [Parameter]
+    public string season { get; set; }
+
+    private List<List<string>> playerList = new(); // id, name
+    private Dictionary<string, List<string>> playersByRole = new(); // Top[0]-Sup[4+] (subs are mixed in)
+    private TeamData team;
+
+    private string status = "loading";
+
+    protected override Task OnInitializedAsync()
+    {
+        team = new TeamData(teamAbbr, season);
+
+        playerList = Database.dbquery("SELECT Players.puuid, Players.name FROM Players " +
+            "INNER JOIN PlayerTeam ON PlayerTeam.puuid = Players.puuid " +
+            "INNER JOIN Teams ON Teams.teamId = PlayerTeam.teamId " +
+            "WHERE Teams.abbreviation = '1IQ'");
+        playersByRole = sortPlayerRoles();
+
+        status = "done";
+
+        return base.OnInitializedAsync();
+    }
+
+    private Dictionary<string, List<string>> sortPlayerRoles()
+    {
+        Dictionary<string, List<string>> roles = new();
+        roles.Add("top", new List<string>());
+        roles.Add("jg", new List<string>());
+        roles.Add("mid", new List<string>());
+        roles.Add("bot", new List<string>());
+        roles.Add("sup", new List<string>());
+
+        foreach(var row in playerList)
+        {
+            var puuid = row[0];
+            var name = row[1];
+
+            roles[Utility.determineRole(puuid)].Add(name);
+        }
+
+        return roles;
+    }
+}

@@ -1,0 +1,80 @@
+﻿@page "/teams/{season?}/{cat?}/{ord?}"
+@attribute [StreamRendering]
+@using RiotMatchData
+
+<PageTitle>Season @season Teams</PageTitle>
+
+<h3>Season @season Teams</h3>
+
+<h5>Season: <a href="/teams/10">10</a></h5>
+
+@if (status == "loading")
+{
+    <h4>Loading...</h4>
+} else if (status == "error")
+{
+    <h4>Error</h4>
+} else
+{
+    <table>
+        <tr class="top">
+            <th>Team</th>
+            <th>Win</th>
+            <th>Loss</th>
+        </tr>
+        @foreach (var teamData in teamDatasSorted())
+        {
+            <tr>
+                <td class="team">
+                    <a href="/team/@season/@teamData.abbr">@teamData.name</a>
+                </td>
+                <td>
+                    @teamData.seriesWin
+                </td>
+                <td>
+                    @teamData.seriesLoss
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string season { get; set; }
+    [Parameter]
+    public string cat { get; set; }
+    [Parameter]
+    public string ord { get; set; }
+
+    private List<List<string>> teams = new();
+    private List<TeamData> teamDatas = new();
+
+    private string status = "loading";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(init);
+    }
+
+    private void init()
+    {
+        season = season ?? Utility.curSeason.ToString();
+        cat = cat ?? "win";
+        ord = ord ?? "desc";
+
+        teams = Database.dbquery($"SELECT name, abbreviation FROM Teams WHERE season = '{season}'");
+
+        foreach(var row in teams)
+        {
+            teamDatas.Add(new TeamData(row[1], season));
+        }
+
+        status = "done";
+    }
+
+    private List<TeamData> teamDatasSorted()
+    {
+        return teamDatas.OrderByDescending(team => team.seriesWin).ThenBy(team => team.seriesLoss).ToList();
+    }
+}

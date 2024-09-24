@@ -1,5 +1,7 @@
 ﻿@page "/series/{seriesId}"
+@attribute [StreamRendering]
 @using RiotMatchData
+@using Newtonsoft.Json
 
 <PageTitle>@seriesTitle</PageTitle>
 
@@ -99,28 +101,36 @@
     private string status = "loading";
     private string? seriesTitle;
     private string? seriesVersion;
-    private List<RiotMatchData?> matchData;
+    private List<RiotMatchData> matchData = new();
     private List<Participant>? players;
     private int gameCount = 0;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        seriesTitle = Database.SeriesTitle(seriesId);
-        matchData = Database.SeriesMatchData(seriesId);
+        await Task.Run(init);
+    }
+
+    private void init()
+    {
+        seriesTitle = Database.dbquery($"SELECT title FROM Series WHERE seriesId = '{seriesId}'")[0][0];
+        List<string> rawMatchData = Database.oneDimList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
+        foreach (var rawMatch in rawMatchData)
+        {
+            matchData.Add(JsonConvert.DeserializeObject<RiotMatchData>(rawMatch));
+        }
 
         if (seriesTitle == null || matchData.Count == 0)
         {
             status = "error";
             seriesTitle = "error";
-        } else
+        }
+        else
         {
             seriesVersion = Utility.GameVersion(matchData[0].info.gameVersion);
             players = matchData[0].info.participants;
 
             status = "done";
         }
-
-        return base.OnInitializedAsync();
     }
 
     private string gameCounter()
@@ -153,7 +163,9 @@
         Dictionary<string, int> teamNames = new();
         foreach (var player in team)
         {
-            var name = Database.playerTeamName(player.riotIdGameName);
+            var name = Database.dbquery("SELECT Teams.name FROM PlayerTeam " + 
+                "INNER JOIN Teams on Teams.teamId = PlayerTeam.teamId " + 
+                $"WHERE PlayerTeam.puuid = '{player.puuid}'")[0][0];
             if (teamNames.ContainsKey(name)) {
                 teamNames[name]++;
             } else {

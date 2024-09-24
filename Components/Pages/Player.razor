@@ -20,10 +20,10 @@
     <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills+stats.assists)/stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.winrate()%)</h3>
     <h3>Most Recent Matches</h3>
     <table>
-        @foreach (var serie in series.OrderByDescending(pair => pair.Value))
+        @foreach (var row in seriesList.OrderByDescending(x => x[0]).ToList())
         {
             <tr>
-                <td><a href="/series/@serie.Value">@serie.Key</a></td>
+                <td><a href="/series/@row[0]">@row[1]</a></td>
             </tr>
         }
     </table>
@@ -33,26 +33,26 @@
     [Parameter]
     public string? player { get; set; }
 
-    private PlayerOverallStats stats = new PlayerOverallStats();
-    private List<Participant> gameStats = new List<Participant>();
-    private List<KeyValuePair<string, int>> series = new();
+    private PlayerData stats;
+    private List<List<string>> seriesList = new();
 
     private string status = "loading";
 
     protected override Task OnInitializedAsync()
     {
-        List<KeyValuePair<string, Participant>> playerData = Database.playerDataList(player, "all");
+        List<string> playerData = Database.oneDimList(Database.dbquery("SELECT participantData FROM PlayerChampMatch " + 
+            "INNER JOIN Players ON Players.puuid = PlayerChampMatch.puuid " + 
+            $"WHERE Players.name = '{player}'"));
         if (playerData.Count == 0)
         {
             status = "error";
         } else
         {
-            stats = new PlayerOverallStats(playerData);
-            foreach (var data in playerData)
-            {
-                gameStats.Add(data.Value);
-            }
-            series = Database.getSeriesForpuuid(stats.puuid);
+            stats = new PlayerData(playerData);
+            seriesList = Database.dbquery("SELECT DISTINCT Series.seriesId, Series.title FROM PlayerChampMatch " +
+                "INNER JOIN Matches ON Matches.matchId = PlayerChampMatch.matchId " + 
+                "INNER JOIN Series ON Series.seriesId = Matches.seriesId " + 
+                $"WHERE puuid = '{stats.puuid}'");
 
             status = "done";
         }

@@ -1,0 +1,30 @@
+﻿td a, th a {
+    display: inline-block;
+    width: 100%;
+    color: black;
+    text-decoration: none;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 4px;
+}
+
+td.win {
+    background-color: lightgreen;
+}
+
+td.loss {
+    background-color: tomato;
+}
+
+td.loss {
+
+}
+
+img.role {
+    margin-top: -4px;
+    height: 24px;
+    width: 24px;
+}
