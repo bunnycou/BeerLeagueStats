@@ -20,7 +20,7 @@ Thread dbupdate = new Thread(() =>
 
         List<List<string>> matches = Database.dbquery("SELECT matchId FROM Matches WHERE matchData IS NULL OR matchData NOT LIKE '{%'");
 
-        if (matches[0][0] != "none")
+        if (matches[0][0] != "none") // update matches
         {
             foreach (var row in matches)
             {
@@ -55,6 +55,40 @@ Thread dbupdate = new Thread(() =>
                     {
                         Database.dbexecute("INSERT INTO PlayerChampMatch (puuid, matchId, participantData, champ) " +
                                             $"VALUES ('{puuid}', '{matchId}', '{JsonConvert.SerializeObject(participant)}', '{champ}')");
+                    }
+                }
+            }
+        }
+
+        List<List<string>> series = Database.dbquery("SELECT seriesId, team1, team2 FROM Series WHERE winner IS NULL");
+        if (series[0][0] != "none") // update series winners
+        {
+            foreach (var row in series)
+            {
+                var seriesId = row[0];
+                var team1 = row[1];
+                var team1w = 0;
+                var team2 = row[2];
+                var team2w = 0;
+                List<string> seriesMatches = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
+                if (seriesMatches[0] != "none") // count match wins, determine series winner
+                {
+                    foreach (var match in seriesMatches)
+                    {
+                        if (Utility.getTeamFromMatchByAbbr(team1, match).win)
+                        {
+                            team1w++;
+                        } else
+                        {
+                            team2w++;
+                        }
+                    }
+                    if (team1w > team2w)
+                    {
+                        Database.dbexecute($"UPDATE Series SET winner = '{team1}' WHERE seriesId = '{seriesId}'");
+                    } else
+                    {
+                        Database.dbexecute($"UPDATE Series SET winner = '{team2}' WHERE seriesId = '{seriesId}'");
                     }
                 }
             }

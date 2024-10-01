@@ -40,7 +40,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        List<string> playerData = Database.oneDimList(Database.dbquery("SELECT participantData FROM PlayerChampMatch " + 
+        List<string> playerData = Database.oneColList(Database.dbquery("SELECT participantData FROM PlayerChampMatch " + 
             "INNER JOIN Players ON Players.puuid = PlayerChampMatch.puuid " + 
             $"WHERE Players.name = '{player}'"));
         if (playerData.Count == 0)

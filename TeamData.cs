@@ -12,39 +12,59 @@ namespace BLStats
             matchLoss = 0;
             seriesWin = 0;
             seriesLoss = 0;
-            this.seriesList = new();
             matchList = new();
 
-            List<List<string>> seriesList = Database.dbquery($"SELECT seriesId, title FROM Series WHERE (team1 = '{abbr}' OR team2 = '{abbr}') AND seriesId LIKE '{season}%'");
-            foreach (var series in seriesList)
+            seriesList = Database.dbquery($"SELECT seriesId, title, winner FROM Series WHERE (team1 = '{abbr}' OR team2 = '{abbr}') AND seriesId LIKE '{season}%'");
+            foreach (var row in seriesList)
             {
-                var seriesId = series[0];
-                var seriesTitle = series[1];
-
-                int seriesMatchWin = 0;
-                int seriesMatchLoss = 0;
-                foreach (var rawMatchData in Database.oneDimList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'")))
+                var seriesId = row[0];
+                var title = row[1];
+                var winner = row[2];
+                if (winner != "none")
                 {
-                    matchList.Add(JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(rawMatchData));
-                    if (Utility.getTeamFromMatchByAbbr(abbr, rawMatchData).win)
+                    if (abbr == winner)
                     {
-                        seriesMatchWin += 1;
+                        seriesWin++;
                     }
-                    else { seriesMatchLoss += 1; }
-                }
-                matchWin += seriesMatchWin;
-                matchLoss += seriesMatchLoss;
-
-                if (seriesMatchWin > seriesMatchLoss) 
-                { 
-                    seriesWin += 1;
-                    this.seriesList.Add(new List<string> { seriesId, seriesTitle, "win" });
-                } else 
-                { 
-                    seriesLoss += 1;
-                    this.seriesList.Add(new List<string> { seriesId, seriesTitle, "loss" });
-                }
+                    else
+                    {
+                        seriesLoss++;
+                    }
+                }       
             }
+            //foreach (var series in seriesList)
+            //{
+            //    var seriesId = series[0];
+            //    var seriesTitle = series[1];
+
+            //    int seriesMatchWin = 0;
+            //    int seriesMatchLoss = 0;
+            //    var matchDataList = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
+            //    if (matchDataList[0] != "none")
+            //    {
+            //        foreach (var rawMatchData in matchDataList)
+            //        {
+            //            matchList.Add(JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(rawMatchData));
+            //            if (Utility.getTeamFromMatchByAbbr(abbr, rawMatchData).win)
+            //            {
+            //                seriesMatchWin += 1;
+            //            }
+            //            else { seriesMatchLoss += 1; }
+            //        }
+            //    }
+            //    matchWin += seriesMatchWin;
+            //    matchLoss += seriesMatchLoss;
+
+            //    if (seriesMatchWin > seriesMatchLoss) 
+            //    { 
+            //        seriesWin += 1;
+            //        this.seriesList.Add(new List<string> { seriesId, seriesTitle, "win" });
+            //    } else 
+            //    { 
+            //        seriesLoss += 1;
+            //        this.seriesList.Add(new List<string> { seriesId, seriesTitle, "loss" });
+            //    }
+            //}
         }
         public string name { get; set; }
         public string abbr { get; set; }
@@ -60,7 +80,7 @@ namespace BLStats
         {
             return Utility.WinRate(seriesWin, seriesLoss);
         }
-        public List<List<string>> seriesList { get; set; }
+        public List<List<string>> seriesList { get; set; } // id, title, winnerAbbr
         public List<RiotMatchData.RiotMatchData> matchList { get; set; }
     }
 }

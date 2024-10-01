@@ -40,7 +40,13 @@ namespace BLStats
                                     retVal[row].Add(dataReader.GetString(i));
                                 } catch
                                 {
-                                    retVal[row].Add(dataReader.GetInt32(i).ToString());
+                                    try
+                                    {
+                                        retVal[row].Add(dataReader.GetInt32(i).ToString());
+                                    } catch
+                                    {
+                                        retVal[row].Add("none"); // this try catch series is my most embarassing moment
+                                    }
                                 }
                             }
                             row++;
@@ -66,7 +72,7 @@ namespace BLStats
                 connection.Close();
             }
         }
-        public static List<string> oneDimList(List<List<string>> list) // convert 2d list to 1d for when there is only one element per row
+        public static List<string> oneColList(List<List<string>> list) // convert 2d list to 1d for when there is only one element per row
         {
             List<string> result = new();
             foreach(var row in list)

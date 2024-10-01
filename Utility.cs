@@ -20,7 +20,7 @@ namespace BLStats
         }
         public static string determineRole (string puuid) //determine player most played role
         {
-            List<string> playerMatches = Database.oneDimList(Database.dbquery($"SELECT participantData FROM PlayerChampMatch WHERE puuid = '{puuid}'"));
+            List<string> playerMatches = Database.oneColList(Database.dbquery($"SELECT participantData FROM PlayerChampMatch WHERE puuid = '{puuid}'"));
             List<Participant> playerMatchData = new();
             foreach (var playerMatch in playerMatches)
             {
@@ -79,7 +79,7 @@ namespace BLStats
         public static Team getTeamFromMatchByAbbr(string teamAbbr, string rawmatch)
         {
             RiotMatchData.RiotMatchData match = JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(rawmatch);
-            List<string> teamPuuids = Database.oneDimList(Database.dbquery($"SELECT Players.puuid FROM Players " +
+            List<string> teamPuuids = Database.oneColList(Database.dbquery($"SELECT Players.puuid FROM Players " +
                 $"INNER JOIN PlayerTeam ON PlayerTeam.puuid = Players.puuid " +
                 $"INNER JOIN Teams ON Teams.teamId = PlayerTeam.teamId " +
                 $"WHERE Teams.abbreviation = '{teamAbbr}'"));

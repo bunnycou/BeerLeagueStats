@@ -13,7 +13,7 @@
 else
 {
     <h3>@team.name <a href="@opggmulti()" target="_blank"><img src="/assets/opgg.webp" /></a></h3>
-    <h4>Season @season | @team.seriesWR()% (@team.seriesWin/@team.seriesLoss) Series WR | @team.matchWR()% (@team.matchWin/@team.matchLoss) Match WR</h4>
+    <h4>Season @season | @team.seriesWR()% (@team.seriesWin/@team.seriesLoss) Series WR</h4>
     <h5>Players</h5>
     <table>
         @foreach (var role in roles)
@@ -37,7 +37,7 @@ else
         @foreach (var series in team.seriesList.OrderByDescending(x => x[0]))
         {
             <tr>
-                <td class="@series[2]">
+                <td class="@WinOrLoss(series[2])">
                     <a href="/series/@series[0]">@series[1]</a>
                 </td>
             </tr>
@@ -110,8 +110,14 @@ else
             }
         }
 
-        
+
 
         return url.Substring(0, url.Length - 3);
+    }
+
+    private string WinOrLoss(string abbr)
+    {
+        if (abbr == "none") { return "none"; }
+        if (abbr == teamAbbr) { return "win"; } else { return "loss"; }
     }
 }

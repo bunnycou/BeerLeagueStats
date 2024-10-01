@@ -13,7 +13,14 @@
 } else  if (status == "loading")
 {
     <h3>Loading Series Data...</h3>
-} else
+} else if (status == "none" && seriesWinner != "none") // no matches, winner
+{
+    <h3>@seriesWinner Won</h3>
+    <h3>No Matches Recorded</h3>
+} else if (seriesWinner == "none") // no matches or matches, no winner
+{
+    <h3>Unfinished Series</h3>
+} else // matches, winner
 {
     @foreach(var match in matchData)
     {
@@ -100,6 +107,7 @@
 
     private string status = "loading";
     private string? seriesTitle;
+    private string seriesWinner;
     private string? seriesVersion;
     private List<RiotMatchData> matchData = new();
     private List<Participant>? players;
@@ -112,25 +120,21 @@
 
     private void init()
     {
-        seriesTitle = Database.dbquery($"SELECT title FROM Series WHERE seriesId = '{seriesId}'")[0][0];
-        List<string> rawMatchData = Database.oneDimList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
-        foreach (var rawMatch in rawMatchData)
+        var seriesData = Database.dbquery($"SELECT title, winner FROM Series WHERE seriesId = '{seriesId}'")[0];
+        seriesTitle = seriesData[0];
+        seriesWinner = seriesData[1]; // abbr name of winner or "null" if no winner yet
+        List<string> rawMatchData = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
+        if (rawMatchData[0] != "none")
         {
-            matchData.Add(JsonConvert.DeserializeObject<RiotMatchData>(rawMatch));
-        }
-
-        if (seriesTitle == null || matchData.Count == 0)
-        {
-            status = "error";
-            seriesTitle = "error";
-        }
-        else
-        {
+            foreach (var rawMatch in rawMatchData)
+            {
+                matchData.Add(JsonConvert.DeserializeObject<RiotMatchData>(rawMatch));
+            }
             seriesVersion = Utility.GameVersion(matchData[0].info.gameVersion);
             players = matchData[0].info.participants;
 
             status = "done";
-        }
+        } else { status = "none"; }
     }
 
     private string gameCounter()

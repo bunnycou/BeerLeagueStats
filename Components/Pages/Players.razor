@@ -76,7 +76,7 @@
             var puuid = player[0];
             var name = player[1];
 
-            List<string> playerdatalist = Database.oneDimList(Database.dbquery($"SELECT participantData FROM PlayerChampMatch WHERE puuid = '{puuid}'"));
+            List<string> playerdatalist = Database.oneColList(Database.dbquery($"SELECT participantData FROM PlayerChampMatch WHERE puuid = '{puuid}'"));
             PlayerData playerOverallStats = new PlayerData(playerdatalist);
             AllPlayersStats.Add(new KeyValuePair<string, PlayerData>(name, playerOverallStats));
         }
