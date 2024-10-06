@@ -26,10 +26,11 @@ Thread dbupdate = new Thread(() =>
             {
                 var matchId = row[0];
                 var rawMatchData = RiotAPI.rawMatchData(matchId).Result;
-                if (rawMatchData != "error")
+                var rawTimelineData = RiotAPI.rawTimelineData(matchId).Result;
+                if (rawMatchData != "error" && rawTimelineData != "error")
                 {
                     RiotMatchData.RiotMatchData matchData = JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(rawMatchData);
-                    RiotMatchTimeline.RiotMatchTimeline timelineData = JsonConvert.DeserializeObject<RiotMatchTimeline.RiotMatchTimeline>(RiotAPI.rawTimelineData(matchId).Result);
+                    RiotMatchTimeline.RiotMatchTimeline timelineData = JsonConvert.DeserializeObject<RiotMatchTimeline.RiotMatchTimeline>(rawTimelineData);
 
                     Database.dbexecute($"UPDATE Matches SET matchData = '{JsonConvert.SerializeObject(matchData)}', " +
                     $"timelineData = '{JsonConvert.SerializeObject(timelineData)}' WHERE matchId = '{matchId}'");
@@ -76,7 +77,7 @@ Thread dbupdate = new Thread(() =>
                 var team2 = row[2];
                 var team2w = 0;
                 List<string> seriesMatches = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
-                if (seriesMatches[0] != "none" && seriesMatches.Count > 1) // count match wins, determine series winner
+                if (!seriesMatches.Contains("none") && seriesMatches.Count > 1) // count match wins, determine series winner
                 {
                     foreach (var match in seriesMatches)
                     {
