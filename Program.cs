@@ -25,36 +25,41 @@ Thread dbupdate = new Thread(() =>
             foreach (var row in matches)
             {
                 var matchId = row[0];
-                RiotMatchData.RiotMatchData matchData = JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(RiotAPI.rawMatchData(matchId).Result);
-                RiotMatchTimeline.RiotMatchTimeline timelineData = JsonConvert.DeserializeObject<RiotMatchTimeline.RiotMatchTimeline>(RiotAPI.rawTimelineData(matchId).Result);
-                Database.dbexecute($"UPDATE Matches SET matchData = '{JsonConvert.SerializeObject(matchData)}', " +
+                var rawMatchData = RiotAPI.rawMatchData(matchId).Result;
+                if (rawMatchData != "error")
+                {
+                    RiotMatchData.RiotMatchData matchData = JsonConvert.DeserializeObject<RiotMatchData.RiotMatchData>(rawMatchData);
+                    RiotMatchTimeline.RiotMatchTimeline timelineData = JsonConvert.DeserializeObject<RiotMatchTimeline.RiotMatchTimeline>(RiotAPI.rawTimelineData(matchId).Result);
+
+                    Database.dbexecute($"UPDATE Matches SET matchData = '{JsonConvert.SerializeObject(matchData)}', " +
                     $"timelineData = '{JsonConvert.SerializeObject(timelineData)}' WHERE matchId = '{matchId}'");
 
-                foreach (var participant in matchData.info.participants)
-                {
-                    var puuid = participant.puuid;
-                    var name = participant.riotIdGameName;
-                    var tag = participant.riotIdTagline;
-                    var champ = participant.championName;
+                    foreach (var participant in matchData.info.participants)
+                    {
+                        var puuid = participant.puuid;
+                        var name = participant.riotIdGameName;
+                        var tag = participant.riotIdTagline;
+                        var champ = participant.championName;
 
-                    List<List<string>> players = Database.dbquery($"SELECT puuid, name, tag FROM Players WHERE puuid = '{puuid}'");
-                    if (players[0][0] == "none") // insert player
-                    {
-                        Database.dbexecute($"INSERT INTO Players (puuid, name, tag) VALUES ('{puuid}', '{name}', '{tag}')");
-                    }
-                    else // update player if need be
-                    {
-                        if (players[0][1] != name || players[0][2] != tag)
+                        List<List<string>> players = Database.dbquery($"SELECT puuid, name, tag FROM Players WHERE puuid = '{puuid}'");
+                        if (players[0][0] == "none") // insert player
                         {
-                            Database.dbexecute($"UPDATE Players SET name = '{name}', tag = '{tag}' WHERE puuid = '{puuid}'");
+                            Database.dbexecute($"INSERT INTO Players (puuid, name, tag) VALUES ('{puuid}', '{name}', '{tag}')");
                         }
-                    }
+                        else // update player if need be
+                        {
+                            if (players[0][1] != name || players[0][2] != tag)
+                            {
+                                Database.dbexecute($"UPDATE Players SET name = '{name}', tag = '{tag}' WHERE puuid = '{puuid}'");
+                            }
+                        }
 
-                    List<List<string>> pcmCheck = Database.dbquery($"SELECT * FROM PlayerChampMatch WHERE puuid = '{puuid}' AND matchId = '{matchId}'");
-                    if (pcmCheck[0][0] == "none")
-                    {
-                        Database.dbexecute("INSERT INTO PlayerChampMatch (puuid, matchId, participantData, champ) " +
-                                            $"VALUES ('{puuid}', '{matchId}', '{JsonConvert.SerializeObject(participant)}', '{champ}')");
+                        List<List<string>> pcmCheck = Database.dbquery($"SELECT * FROM PlayerChampMatch WHERE puuid = '{puuid}' AND matchId = '{matchId}'");
+                        if (pcmCheck[0][0] == "none")
+                        {
+                            Database.dbexecute("INSERT INTO PlayerChampMatch (puuid, matchId, participantData, champ) " +
+                                                $"VALUES ('{puuid}', '{matchId}', '{JsonConvert.SerializeObject(participant)}', '{champ}')");
+                        }
                     }
                 }
             }
@@ -71,7 +76,7 @@ Thread dbupdate = new Thread(() =>
                 var team2 = row[2];
                 var team2w = 0;
                 List<string> seriesMatches = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
-                if (seriesMatches[0] != "none") // count match wins, determine series winner
+                if (seriesMatches[0] != "none" && seriesMatches.Count > 1) // count match wins, determine series winner
                 {
                     foreach (var match in seriesMatches)
                     {
@@ -86,10 +91,10 @@ Thread dbupdate = new Thread(() =>
                     if (team1w > team2w)
                     {
                         Database.dbexecute($"UPDATE Series SET winner = '{team1}' WHERE seriesId = '{seriesId}'");
-                    } else
+                    } else if (team2w > team1w)
                     {
                         Database.dbexecute($"UPDATE Series SET winner = '{team2}' WHERE seriesId = '{seriesId}'");
-                    }
+                    } // else dont update because there is 2 matches and it is 1-1
                 }
             }
         }
