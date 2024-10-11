@@ -77,7 +77,10 @@
                         @foreach (var player in orderTeam(team.ToList()))
                         {
                             <tr>
-                                <td class="player"><img src="@DataDragon.champIcon(player.championName, seriesVersion)" title="@player.championName" /><p class="CellContent"><a href="player/@player.riotIdGameName">@player.riotIdGameName</a></p></td>
+                                <td class="player">
+                                    <a href="champ/@player.championName"><img src="@DataDragon.champIcon(player.championName, seriesVersion)" title="@player.championName" /></a>
+                                    <p class="CellContent"><a href="player/@player.riotIdGameName">@player.riotIdGameName</a></p>
+                                </td>
                                 <td class="summoners"><img src="@DataDragon.summonerIcon(player.summoner1Id, seriesVersion)" /><img src="@DataDragon.summonerIcon(player.summoner2Id, seriesVersion)" /></td>
                                 <td class="items">
                                     <img src="@DataDragon.itemIcon(player.item0, seriesVersion)" />

@@ -3,14 +3,13 @@
 
 <PageTitle>Players</PageTitle>
 
-<h1>Beer League Season @seasonStr()</h1>
-<h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a></h4>
-
 @if (status == "loading")
 {
     <h2>Loading...</h2>
 } else if (status == "done")
 {
+    <h1>Beer League @seasonStr()</h1>
+    <h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a></h4>
     <table>
         <tr class="top">
             <th><a href="@sortLink("name")">Player</a></th>
@@ -122,10 +121,10 @@
     {
         if (season == "all")
         {
-            return "Overall";
+            return "All Seasons";
         } else
         {
-            return season;
+            return "Season " + season;
         }
     }
 }

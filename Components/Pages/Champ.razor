@@ -1,0 +1,73 @@
+﻿@page "/Champ/{name}/{season?}"
+@attribute [StreamRendering]
+
+<PageTitle>@name</PageTitle>
+
+@if (status == "loading")
+{
+    <h2>Loading...</h2>
+}
+else if (status == "error") // unused
+{
+    <h2>@name not played!</h2>
+}
+else if (status == "done")
+{
+    <div class="top">
+        <h4>Season: <a href="/champ/@name/all">All</a> - <a href="/champ/@name/10">10</a></h4>
+        <h1 class="name"> <img src="@DataDragon.champIcon(name)" class="icon" /> @name | @seasonStr()</h1>
+        <a href="@lolalyticsLink()" target="_blank"><img src="/assets/lolalytics340.webp" class="lolalytics" /></a>
+    </div>
+    <h3 class="pickban">Prescence: @champData.prescence()% (@champData.picks Picks, @champData.bans Bans) | Winrate: @champData.winrate()% (@champData.wins/@champData.losses)</h3>
+    <h3>Most Recent Matches</h3>
+     <table>
+         @foreach (var row in champData.series.OrderByDescending(x => x[0]).ToList())
+         {
+             <tr>
+                 <td><a href="/series/@row[0]">@row[1]</a></td>
+             </tr>
+         }
+     </table>
+}
+
+@code {
+    [Parameter]
+    public string? name { get; set; }
+    [Parameter]
+    public string? season { get; set; }
+
+    private ChampData champData;
+
+    private string status = "loading";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(init);
+    }
+
+    private void init()
+    {
+        name = name ?? Database.dbquery("SELECT TOP 1 champ FROM PlayerChampMatch")[0][0];
+        season = season ?? "all";
+
+        champData = new ChampData(name, season);
+        champData.getBans();
+        champData.getSeries();
+
+        status = "done";
+    }
+
+    private string lolalyticsLink()
+    {
+        return $"https://lolalytics.com/lol/{name.ToLower()}/build/";
+    }
+
+    private string seasonStr()
+    {
+        if (season == "all")
+        {
+            return "All Seasons";
+        }
+        else { return "Season " + season; }
+    }
+}

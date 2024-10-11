@@ -5,9 +5,9 @@ namespace BLStats
 {
     public static class DataDragon
     {
-        private static Dictionary<int, string> summoners = new Dictionary<int, string>();
-        private static Dictionary<int, string> runes = new Dictionary<int, string>();
-        private static Dictionary<int, string> champs = new Dictionary<int, string>();
+        public static Dictionary<int, string> summoners = new Dictionary<int, string>();
+        public static Dictionary<int, string> runes = new Dictionary<int, string>();
+        public static Dictionary<int, string> champs = new Dictionary<int, string>();
         private static string latest { get; set; }
         private static List<string> versions { get; set; }
         public static string champIcon(string champ)

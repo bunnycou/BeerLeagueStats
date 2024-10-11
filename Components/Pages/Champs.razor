@@ -1,0 +1,99 @@
+﻿@page "/Champs/{season?}/{sort?}"
+@attribute [StreamRendering]
+
+<PageTitle>Champs</PageTitle>
+
+@if (status == "loading")
+{
+    <h2>Loading...</h2>
+}
+else
+{
+    <h1>Beer League @seasonStr()</h1>
+    <h4>Season: <a href="/champs/all">All</a> - <a href="/champs/10">10</a></h4>
+    <p>@ChampsList.Count Unique Champs Played</p>
+    <table>
+        <tr class="top">
+            <th><a href="Champs/@season/champ">Champ</a></th>
+            <th><a href="Champs/@season/picks">Picks</a></th>
+            <th><a href="Champs/@season/wins">Wins</a></th>
+            <th><a href="Champs/@season/losses">Losses</a></th>
+            <th><a href="Champs/@season/winrate">Win/Loss</a></th>
+        </tr>
+        @foreach (var champ in ChampsList)
+        {
+            <tr>
+                <td class="champ"><a href="/champ/@champ.name"><img src="@DataDragon.champIcon(@champ.name)" /> @champ.name</a></td>
+                <td class="picks">@champ.picks</td>
+                <td class="wins">@champ.wins</td>
+                <td class="losses">@champ.losses</td>
+                <td class="winrate">@champ.winrate()%</td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string? season { get; set; }
+    [Parameter] 
+    public string? sort { get; set; }
+
+    private List<string> AllChamps = new(); // champname, participantdata, matchdata
+    private List<ChampData> ChampsList = new();
+
+    private string status = "loading";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(init);
+    }
+
+    private void init()
+    {
+        season = season ?? "all";
+        sort = sort ?? "champ";
+
+        if (season == "all")
+        {
+            AllChamps = Database.oneColList(Database.dbquery("SELECT DISTINCT Champ FROM PlayerChampMatch"));
+        } else
+        {
+            AllChamps = Database.oneColList(Database.dbquery("SELECT DISTINCT Champ FROM PlayerChampMatch " +
+                "INNER JOIN Matches on Matches.matchId = PlayerChampMatch.matchId " +
+                $"WHERE seriesId LIKE '{season}%'"));
+        }
+
+        foreach (var champ in AllChamps)
+        {
+            ChampsList.Add(new ChampData(champ, season));
+        }
+
+        if (sort == "champ")
+        {
+            ChampsList = ChampsList.OrderBy(x => x.name).ToList();
+        } else if (sort == "picks")
+        {
+            ChampsList = ChampsList.OrderByDescending(x => x.picks).ThenBy(x => x.name).ToList();
+        } else if (sort == "wins")
+        {
+            ChampsList = ChampsList.OrderByDescending(x => x.wins).ThenBy(x => x.name).ToList();
+        } else if (sort == "losses") 
+        {
+            ChampsList = ChampsList.OrderByDescending(x => x.losses).ThenBy(x => x.name).ToList();
+        } else if (sort == "winrate")
+        {
+            ChampsList = ChampsList.OrderByDescending(x => x.winrate()).ThenBy(x => x.name).ToList();
+        }
+
+        status = "done";
+    }
+
+    private string seasonStr()
+    {
+        if (season == "all")
+        {
+            return "All Seasons";
+        } else { return "Season " + season; }
+    }
+}

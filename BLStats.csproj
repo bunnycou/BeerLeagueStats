@@ -7,10 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Components\Pages\Champs.razor.css" />
     <None Remove="Components\Pages\Team.razor.css" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Components\Pages\Champs.razor.css" />
     <Content Include="Components\Pages\Team.razor.css" />
   </ItemGroup>
 

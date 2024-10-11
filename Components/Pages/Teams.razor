@@ -2,11 +2,7 @@
 @attribute [StreamRendering]
 @using RiotMatchData
 
-<PageTitle>Season @season Teams</PageTitle>
-
-<h3>Season @season Teams</h3>
-
-<h5>Season: <a href="/teams/10">10</a></h5>
+<PageTitle>Teams</PageTitle>
 
 @if (status == "loading")
 {
@@ -16,6 +12,8 @@
     <h4>Error</h4>
 } else
 {
+    <h3>@seasonStr() Teams</h3>
+    <h5>Season: <a href="/teams/10">10</a></h5>
     <table>
         <tr class="top">
             <th>Team</th>
@@ -76,5 +74,10 @@
     private List<TeamData> teamDatasSorted()
     {
         return teamDatas.OrderByDescending(team => team.seriesWin).ThenBy(team => team.seriesLoss).ToList();
+    }
+
+    private string seasonStr()
+    {
+        return "Season " + season;
     }
 }
