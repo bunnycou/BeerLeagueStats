@@ -1,12 +1,12 @@
 ﻿table {
     background-color: lightgray;
     border: solid;
-    width: 35vw;
-    display: table;
+    width: 40vw;
 }
 
-div {
-    display: inline-block;
+div.match {
+    display: flex;
+    justify-content: space-evenly;
 }
 
 td {
@@ -17,8 +17,40 @@ td.win {
     float: right;
 }
 
+th.centerHead {
+    text-align: center;
+}
+
+td.runes {
+    position: relative;
+}
+
+img.primaryRune {
+    width: 32px;
+    height: 32px;
+    position: relative;
+}
+img.secondaryRune {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+}
+
 td.ban {
-    width: 30%;
+}
+
+td.dmg {
+    text-align: right;
+}
+
+td.cs {
+    text-align: right;
+}
+
+td.kda {
+    text-align: right;
 }
 
 th {
@@ -26,7 +58,6 @@ th {
 }
 
 table.blue {
-    margin-right: 1%;
     border-color: #0094ff;
 }
 
@@ -48,7 +79,6 @@ table.blue td {
 }
 
 table.red {
-    margin-left: 1%;
     border-color: #ff0000;
 }
 

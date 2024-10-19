@@ -5,9 +5,9 @@ namespace BLStats
 {
     public static class DataDragon
     {
-        public static Dictionary<int, string> summoners = new Dictionary<int, string>();
-        public static Dictionary<int, string> runes = new Dictionary<int, string>();
-        public static Dictionary<int, string> champs = new Dictionary<int, string>();
+        public static Dictionary<int, string> summoners = new();
+        public static Dictionary<int, List<string>> runes = new();
+        public static Dictionary<int, string> champs = new();
         private static string latest { get; set; }
         private static List<string> versions { get; set; }
         public static string champIcon(string champ)
@@ -35,9 +35,17 @@ namespace BLStats
         {
             return $"https://ddragon.leagueoflegends.com/cdn/{ddVersion(version)}/img/spell/{summoners[summoner]}.png";
         }
+        public static string runeIcon(int rune)
+        {
+            return $"https://ddragon.leagueoflegends.com/cdn/img/{runes[rune][0]}";
+        }
+        public static string runeName(int rune)
+        {
+            return runes[rune][1];
+        }
         public async static void InitDataDragon()
         {
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new HttpClient()) // version
             {
                 var response = await client.GetAsync("https://ddragon.leagueoflegends.com/api/versions.json");
 
@@ -50,7 +58,7 @@ namespace BLStats
                 }
             }
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new HttpClient()) // summoners
             {
                 var response = await client.GetAsync($"https://ddragon.leagueoflegends.com/cdn/{latest}/data/en_US/summoner.json");
 
@@ -68,7 +76,7 @@ namespace BLStats
                 }
             }
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new HttpClient()) // champs
             {
                 var response = await client.GetAsync($"https://ddragon.leagueoflegends.com/cdn/{latest}/data/en_US/champion.json");
 
@@ -81,6 +89,25 @@ namespace BLStats
                         foreach (var champ in champion.Children()) //i blame riot for this
                         {
                             champs.Add((int)champ.key, (string)champ.id);
+                        }
+                    }
+                }
+            }
+
+            using (HttpClient client = new HttpClient()) // runes
+            {
+                var response = await client.GetAsync($"https://ddragon.leagueoflegends.com/cdn/{latest}/data/en_US/runesReforged.json");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var jsonData = JsonConvert.DeserializeObject<dynamic>(content);
+                    foreach (var child in jsonData)
+                    {
+                        runes.Add((int)child.id, new() { (string)child.icon, (string)child.name });
+                        foreach (var rune in child.slots[0].runes)
+                        {
+                            runes.Add((int)rune.id, new() { (string)rune.icon, (string)rune.name});
                         }
                     }
                 }

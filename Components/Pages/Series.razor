@@ -17,15 +17,20 @@
 {
     <h3>@seriesWinner Won</h3>
     <h3>No Matches Recorded</h3>
-} else if (seriesWinner == "none") // no matches or matches, no winner
-{
-    <h3>Unfinished Series</h3>
 } else // matches, winner
 {
+    @if (status != "none" && seriesWinner == "none") // matches, no winner
+    {
+        <h3>Unfinished Series</h3>
+    } else if (status != "none" && seriesWinner != "none") // matches, winner
+    {
+        <h3>@seriesWinner Won in @matchData.Count matches</h3>
+    }
+
     @foreach(var match in matchData)
     {
-        <div>
-            <p class="GameTime">Game @gameCounter() - @Utility.GameLength(match.info.gameDuration)</p>
+        <p class="GameTime">Game @gameCounter() - @Utility.GameLength(match.info.gameDuration)</p>
+        <div class="match">
             @foreach(var team in match.info.participants.GroupBy(x => x.teamId))
             {
                 <div>
@@ -70,9 +75,10 @@
                     </table>
                     <table class="team @teamStr(team.Key)">
                         <tr class="header">
-                            <th colspan="3">Player</th>
-                            <th>CS</th>
-                            <th>KDA</th>
+                            <th colspan="4">Player</th>
+                            <th class="centerHead">CS</th>
+                            <th class="centerHead">KDA</th>
+                            <th class="centerHead">DMG</th>
                         </tr>
                         @foreach (var player in orderTeam(team.ToList()))
                         {
@@ -82,6 +88,10 @@
                                     <p class="CellContent"><a href="player/@player.riotIdGameName">@player.riotIdGameName</a></p>
                                 </td>
                                 <td class="summoners"><img src="@DataDragon.summonerIcon(player.summoner1Id, seriesVersion)" /><img src="@DataDragon.summonerIcon(player.summoner2Id, seriesVersion)" /></td>
+                                <td class="runes">
+                                    <img class="primaryRune rune" src="@DataDragon.runeIcon(player.perks.styles[0].selections[0].perk)" title="@DataDragon.runeName(player.perks.styles[0].selections[0].perk)" />
+                                    <img class="secondaryRune rune" src="@DataDragon.runeIcon(player.perks.styles[1].style)" title="@DataDragon.runeName(player.perks.styles[1].style)"/>
+                                </td>
                                 <td class="items">
                                     <img src="@DataDragon.itemIcon(player.item0, seriesVersion)" />
                                     <img src="@DataDragon.itemIcon(player.item1, seriesVersion)" />
@@ -91,10 +101,9 @@
                                     <img src="@DataDragon.itemIcon(player.item5, seriesVersion)" />
                                     <p class="VisionScore" style="background-image: url(@DataDragon.itemIcon(player.item6, seriesVersion))">@player.visionScore</p>
                                 </td>
-                                <td class="cs"><p class="CellContent">@(player.totalMinionsKilled + player.neutralMinionsKilled)</p></td>
-                                <td class="kda">
-                                    <p class="CellContent">@player.kills/@player.deaths/@player.assists</p>
-                                </td>
+                                <td class="cs">@(player.totalMinionsKilled + player.neutralMinionsKilled)</td>
+                                <td class="kda">@player.kills/@player.deaths/@player.assists</td>
+                                <td class="dmg">@player.totalDamageDealtToChampions</td>
                             </tr>
                         }
                     </table>
