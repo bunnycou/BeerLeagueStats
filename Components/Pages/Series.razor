@@ -13,16 +13,19 @@
 } else  if (status == "loading")
 {
     <h3>Loading Series Data...</h3>
-} else if (status == "none" && seriesWinner != "none") // no matches, winner
+} else if (status == "none" && seriesWinner != "null") // no matches, winner
 {
     <h3>@seriesWinner Won</h3>
     <h3>No Matches Recorded</h3>
-} else // matches, winner
+} else if (status == "none" && seriesWinner == "null") // no matches, no winner, series
 {
-    @if (status != "none" && seriesWinner == "none") // matches, no winner
+    <h3>No Matches Yet</h3>
+} else // matches
+{
+    @if (status != "none" && seriesWinner == "null") // matches, no winner
     {
         <h3>Unfinished Series</h3>
-    } else if (status != "none" && seriesWinner != "none") // matches, winner
+    } else if (status != "none" && seriesWinner != "null") // matches, winner
     {
         <h3>@seriesWinner Won in @matchData.Count matches</h3>
     }

@@ -10,3 +10,7 @@ table, th, td {
     border-collapse: collapse;
     padding: 4px;
 }
+
+td.unfinished {
+    background-color: khaki;
+}

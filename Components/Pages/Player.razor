@@ -23,7 +23,12 @@
         @foreach (var row in seriesList.OrderByDescending(x => x[0]).ToList())
         {
             <tr>
-                <td><a href="/series/@row[0]">@row[1]</a></td>
+                <td class="@didWin()"><a href="/series/@row[0]">@row[1]
+                        @foreach (var champ in stats.playerSeries[row[0]].Reverse<string>())
+                        {
+                            <img class="champIcon" src="@DataDragon.champIcon(champ)" title="@champ"/>
+                        }
+                    </a></td>
             </tr>
         }
     </table>
@@ -40,16 +45,17 @@
 
     protected override Task OnInitializedAsync()
     {
-        List<string> playerData = Database.oneColList(Database.dbquery("SELECT participantData FROM PlayerChampMatch " + 
-            "INNER JOIN Players ON Players.puuid = PlayerChampMatch.puuid " + 
-            $"WHERE Players.name = '{player}'"));
-        if (playerData.Count == 0)
+        List<List<string>> pdata = Database.dbquery("SELECT participantData, seriesId FROM PlayerChampMatch " +
+                "INNER JOIN Players ON Players.puuid = PlayerChampMatch.puuid " +
+                "INNER JOIN Matches ON Matches.matchId = PlayerChampMatch.matchId " +
+                $"WHERE Players.name = '{player}'");
+        if (pdata.Count == 0)
         {
             status = "error";
         } else
         {
-            stats = new PlayerData(playerData);
-            seriesList = Database.dbquery("SELECT DISTINCT Series.seriesId, Series.title FROM PlayerChampMatch " +
+            stats = new PlayerData(pdata);
+            seriesList = Database.dbquery("SELECT DISTINCT Series.seriesId, Series.title, FROM PlayerChampMatch " +
                 "INNER JOIN Matches ON Matches.matchId = PlayerChampMatch.matchId " + 
                 "INNER JOIN Series ON Series.seriesId = Matches.seriesId " + 
                 $"WHERE puuid = '{stats.puuid}'");
@@ -64,5 +70,10 @@
     private string opggLink()
     {
         return $"https://www.op.gg/summoners/na/{stats.name}-{stats.tag}";
+    }
+
+    private string didWin()
+    {
+        return "loss";
     }
 }

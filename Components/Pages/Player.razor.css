@@ -27,6 +27,7 @@ img.opgg {
 
 img.champIcon {
     height: 32px;
+    float: right;
 }
 
 h3.kda {

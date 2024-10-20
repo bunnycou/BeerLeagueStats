@@ -45,7 +45,8 @@ namespace BLStats
                                         retVal[row].Add(dataReader.GetInt32(i).ToString());
                                     } catch
                                     {
-                                        retVal[row].Add("none"); // this try catch series is my most embarassing moment
+                                        retVal[row].Add("null"); // not string or int then its null
+                                        // this try catch series is my most embarassing moment
                                     }
                                 }
                             }

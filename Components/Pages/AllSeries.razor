@@ -15,7 +15,7 @@
         @foreach(var serie in series)
         {
             <tr>
-                <td>
+                <td class="@isFinished(serie)">
                     <a href="/series/@serie[0]">@serie[1]</a>
                 </td>
             </tr>
@@ -39,7 +39,7 @@
     {
         season = season ?? Utility.curSeason.ToString();
 
-        series = Database.dbquery($"SELECT seriesId, title FROM Series WHERE seriesId LIKE '{season}%'").OrderByDescending(x => x[0]).ToList();
+        series = Database.dbquery($"SELECT seriesId, title, winner FROM Series WHERE seriesId LIKE '{season}%'").OrderByDescending(x => x[0]).ToList();
 
         status = "done";
     }
@@ -47,5 +47,16 @@
     private string seasonStr()
     {
         return "Season " + season;
+    }
+
+    private string isFinished(List<string> series) // id, title, winner
+    {
+        if (series[2] != "null")
+        {
+            return "finished";
+        } else
+        {
+            return "unfinished";
+        }
     }
 }
