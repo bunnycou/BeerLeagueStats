@@ -17,21 +17,47 @@
         <img src="/assets/roles/@(Utility.roleShort(stats.primaryRole)).webp" class="role" />
         <a href="@opggLink()" target="_blank"><img src="/assets/opgg.webp" class="opgg" /></a>
     </div>
-    <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills+stats.assists)/stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.winrate()%)</h3>
-    <h3>Most Recent Matches</h3>
-    <table>
-        @foreach (var row in seriesList.OrderByDescending(x => x[0]).ToList())
-        {
-            <tr>
-                <td class="@didWin()"><a href="/series/@row[0]">@row[1]
-                        @foreach (var champ in stats.playerSeries[row[0]].Reverse<string>())
-                        {
-                            <img class="champIcon" src="@DataDragon.champIcon(champ)" title="@champ"/>
-                        }
-                    </a></td>
-            </tr>
-        }
-    </table>
+    <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills + stats.assists) / stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.winrate()%)</h3>
+    <div class="tables">
+        <div class="matches">
+            <h3>Most Recent Matches</h3>
+            <table>
+                @foreach (var row in seriesList.OrderByDescending(x => x[0]).ToList())
+                {
+                    <tr>
+                        <td class="@didWin()"><a href="/series/@row[0]">@row[1]
+                                @foreach (var champ in stats.playerSeries[row[0]].Reverse<string>())
+                                {
+                                    <img class="champIcon" src="@DataDragon.champIcon(champ)" title="@champ"/>
+                                }
+                            </a></td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <div class="champs">
+            <h3>Most Played Champs</h3>
+            <p>@stats.playerChamps.Count Unique Champs Played</p>
+            <table>
+                <tr>
+                    <th>Champ</th>
+                    <th>Games</th>
+                </tr>
+                @foreach (var entry in stats.playerChamps.OrderByDescending(l => l.Value).ThenBy(l => l.Key).ToList())
+                {
+                    <tr>
+                        <td>
+                            <a href="/champ/@entry.Key">
+                                <img class="champIcon" src="@DataDragon.champIcon(entry.Key)" title="@entry.Key" />
+                                @entry.Key
+                            </a>
+                        </td>
+                        <td>@entry.Value</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
 }
 
 @code {

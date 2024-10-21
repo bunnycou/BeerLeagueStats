@@ -11,6 +11,18 @@ table, th, td {
     padding: 6px;
 }
 
+div.tables {
+    display: flex;
+}
+
+div.matches {
+    padding-right: 2em;
+}
+
+div.champs {
+    
+}
+
 h1.name {
     float: left;
 }
