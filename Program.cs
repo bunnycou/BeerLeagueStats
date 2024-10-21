@@ -77,7 +77,7 @@ Thread dbupdate = new Thread(() =>
                 var team2 = row[2];
                 var team2w = 0;
                 List<string> seriesMatches = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
-                if (!seriesMatches.Contains("none") && seriesMatches.Count > 1) // count match wins, determine series winner
+                if (!seriesMatches.Contains("null") && seriesMatches.Count > 1) // count match wins, determine series winner
                 {
                     foreach (var match in seriesMatches)
                     {

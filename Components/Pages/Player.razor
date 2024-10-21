@@ -55,7 +55,7 @@
         } else
         {
             stats = new PlayerData(pdata);
-            seriesList = Database.dbquery("SELECT DISTINCT Series.seriesId, Series.title, FROM PlayerChampMatch " +
+            seriesList = Database.dbquery("SELECT DISTINCT Series.seriesId, Series.title FROM PlayerChampMatch " +
                 "INNER JOIN Matches ON Matches.matchId = PlayerChampMatch.matchId " + 
                 "INNER JOIN Series ON Series.seriesId = Matches.seriesId " + 
                 $"WHERE puuid = '{stats.puuid}'");

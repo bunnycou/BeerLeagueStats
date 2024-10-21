@@ -138,7 +138,7 @@
         var seriesData = Database.dbquery($"SELECT title, winner FROM Series WHERE seriesId = '{seriesId}'")[0];
         seriesTitle = seriesData[0];
         seriesWinner = seriesData[1]; // abbr name of winner or "null" if no winner yet
-        List<string> rawMatchData = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}'"));
+        List<string> rawMatchData = Database.oneColList(Database.dbquery($"SELECT matchData FROM Matches WHERE seriesId = '{seriesId}' AND matchData IS NOT NULL"));
         if (rawMatchData[0] != "none")
         {
             foreach (var rawMatch in rawMatchData)

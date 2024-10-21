@@ -6,6 +6,37 @@ namespace BLStats
 {
     public class PlayerData
     {
+        public PlayerData(List<string> data) // just participant data for no series data
+        {
+            win = 0;
+            loss = 0;
+            kills = 0;
+            deaths = 0;
+            assists = 0;
+            Dictionary<string, int> roles = new Dictionary<string, int>();
+
+            bool first = true;
+            foreach (var gamedata in data)
+            {
+                var Game = JsonConvert.DeserializeObject<Participant>(gamedata);
+                if (first)
+                {
+                    first = false;
+                    name = Game.riotIdGameName;
+                    tag = Game.riotIdTagline;
+                    puuid = Game.puuid;
+                }
+                if (Game.win) { win++; } else { loss++; }
+                kills += Game.kills;
+                deaths += Game.deaths;
+                assists += Game.assists;
+                if (roles.ContainsKey(Game.teamPosition)) { roles[Game.teamPosition] += 1; } else { roles.Add(Game.teamPosition, 1); }
+            }
+
+            var role = roles.OrderByDescending(pair => pair.Value).First().Key;
+
+            primaryRole = role == "TOP" ? "Top" : role == "JUNGLE" ? "Jungle" : role == "MIDDLE" ? "Middle" : role == "BOTTOM" ? "Bottom" : "Support";
+        }
         public PlayerData(List<List<string>> data)
         {
             win = 0;
