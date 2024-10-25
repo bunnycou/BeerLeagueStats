@@ -37,7 +37,7 @@ namespace RiotMatchData
         public int alliedJungleMonsterKills { get; set; }
         public int baronTakedowns { get; set; }
         public int blastConeOppositeOpponentCount { get; set; }
-        public int bountyGold { get; set; }
+        public decimal bountyGold { get; set; }
         public int buffsStolen { get; set; }
         public int completeSupportQuestInTime { get; set; }
         public double controlWardTimeCoverageInRiverOrEnemyHalf { get; set; }
