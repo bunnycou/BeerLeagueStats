@@ -17,7 +17,7 @@
         <img src="/assets/roles/@(Utility.roleShort(stats.primaryRole)).webp" class="role" />
         <a href="@opggLink()" target="_blank"><img src="/assets/opgg.webp" class="opgg" /></a>
     </div>
-    <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills + stats.assists) / stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.winrate()%)</h3>
+    <h3 class="kda">KDA @stats.kills/@stats.deaths/@stats.assists (@(Math.Round((decimal)(stats.kills + stats.assists) / stats.deaths, 1))) | W/L @stats.win/@stats.loss (@stats.WinRate)</h3>
     <div class="tables">
         <div class="matches">
             <h3>Most Recent Matches</h3>
