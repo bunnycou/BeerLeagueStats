@@ -1,0 +1,7 @@
+﻿{
+  "server": "10.10.10.10",
+  "userId": "username",
+  "password": "pass",
+  "database": "databasename",
+  "APIKey": "Riot API Key"
+}

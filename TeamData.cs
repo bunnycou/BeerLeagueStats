@@ -20,7 +20,7 @@ namespace BLStats
                 var seriesId = row[0];
                 var title = row[1];
                 var winner = row[2];
-                if (winner != "none")
+                if (winner != "null")
                 {
                     if (abbr == winner)
                     {
