@@ -12,6 +12,7 @@ namespace BLStats
         private static List<string> versions { get; set; }
         public static string champIcon(string champ)
         {
+            if (champ == "FiddleSticks") champ = "Fiddlesticks"; // the champ name has a capitol S but icon does not and the url is case sensitive
             return $"https://ddragon.leagueoflegends.com/cdn/{latest}/img/champion/{champ}.png";
         }
         public static string champIcon(string champ, string version)
