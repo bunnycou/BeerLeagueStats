@@ -19,10 +19,21 @@ namespace BLStats
             return source.OrderByDescending(item => GetPropertyValue(item.Value, propertyName));
         }
 
-        private static object? GetPropertyValue(object obj, string propertyName)
+        private static object? GetPropertyValue(PlayerData obj, string propertyName)
         {
-            return obj.GetType().GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
-                    ?.GetValue(obj, null);
+            var propertyInfo = obj.GetType().GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (propertyInfo != null)
+            {
+                return propertyInfo.GetValue(obj, null);
+            }
+
+            var methodInfo = obj.GetType().GetMethod(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (methodInfo != null)
+            {
+                return methodInfo.Invoke(obj, null);
+            }
+
+            return null;
         }
     }
 }
