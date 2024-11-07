@@ -4,6 +4,13 @@
     width: 40vw;
 }
 
+td a, th a {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
 div.match {
     display: flex;
     justify-content: space-evenly;

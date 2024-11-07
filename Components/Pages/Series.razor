@@ -13,19 +13,19 @@
 } else  if (status == "loading")
 {
     <h3>Loading Series Data...</h3>
-} else if (status == "none" && seriesWinner != "null") // no matches, winner
+} else if (status == "none" && seriesWinner != "null") // no matches, winner (forfeit)
 {
     <h3>@seriesWinner Won</h3>
     <h3>No Matches Recorded</h3>
-} else if (status == "none" && seriesWinner == "null") // no matches, no winner, series
+} else if (status == "none" && seriesWinner == "null") // no matches, no winner, series (series exists in database no matches)
 {
     <h3>No Matches Yet</h3>
 } else // matches
 {
-    @if (status != "none" && seriesWinner == "null") // matches, no winner
+    @if (status != "none" && seriesWinner == "null") // matches, no winner (in progress)
     {
         <h3>Unfinished Series</h3>
-    } else if (status != "none" && seriesWinner != "null") // matches, winner
+    } else if (status != "none" && seriesWinner != "null") // matches, winner (finished series)
     {
         <h3>@seriesWinner Won in @matchData.Count matches</h3>
     }
@@ -39,7 +39,7 @@
                 <div>
                     <table class="team @teamStr(team.Key)">
                         <tr>
-                            <th colspan="3">@teamName(team.ToList())</th>
+                            <th colspan="3"><a href="/team/@seriesId.Substring(0,2)/@teamAbbr(team.ToList())">@teamName(team.ToList())</a></th>
                         </tr>
                         <tr>
                             <th>Bans</th>
@@ -86,8 +86,11 @@
                         @foreach (var player in orderTeam(team.ToList()))
                         {
                             <tr>
-                                <td class="player">
+                                <td class="champ">
                                     <a href="champ/@player.championName"><img src="@DataDragon.champIcon(player.championName, seriesVersion)" title="@player.championName" /></a>
+                                </td>
+                                <td class="player">
+                                    
                                     <p class="CellContent"><a href="player/@player.riotIdGameName">@player.riotIdGameName</a></p>
                                 </td>
                                 <td class="summoners"><img src="@DataDragon.summonerIcon(player.summoner1Id, seriesVersion)" /><img src="@DataDragon.summonerIcon(player.summoner2Id, seriesVersion)" /></td>
@@ -188,6 +191,26 @@
             if (teamNames.ContainsKey(name)) {
                 teamNames[name]++;
             } else {
+                teamNames.Add(name, 0);
+            }
+        }
+        return teamNames.OrderByDescending(x => x.Value).First().Key;
+    }
+
+    private string teamAbbr(List<Participant> team)
+    {
+        Dictionary<string, int> teamNames = new();
+        foreach (var player in team)
+        {
+            var name = Database.dbquery("SELECT Teams.abbreviation FROM PlayerTeam " +
+                "INNER JOIN Teams on Teams.teamId = PlayerTeam.teamId " +
+                $"WHERE PlayerTeam.puuid = '{player.puuid}'")[0][0];
+            if (teamNames.ContainsKey(name))
+            {
+                teamNames[name]++;
+            }
+            else
+            {
                 teamNames.Add(name, 0);
             }
         }
