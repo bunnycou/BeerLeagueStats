@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JS
 
 <div class="page">
     <div class="sidebar">
@@ -21,3 +22,22 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    private bool _isFirstRender = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Restore the scroll position if this is the initial render after prerendering
+            await JS.InvokeVoidAsync("scrollHelper.restoreScrollPosition");
+            _isFirstRender = false;
+        }
+        else
+        {
+            // Save the scroll position on each re-render after the initial render is complete
+            await JS.InvokeVoidAsync("scrollHelper.saveScrollPosition");
+        }
+    }
+}

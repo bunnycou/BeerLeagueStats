@@ -1,76 +1,250 @@
 ﻿@page "/Players/{season?}/{sort?}"
 @attribute [StreamRendering]
+@using BLStats
 
 <PageTitle>Players</PageTitle>
 
 @if (status == "loading")
 {
-    <h2>Loading...</h2>
-} else if (status == "done")
+   <h2>Loading...</h2>
+} 
+else if (status == "done")
 {
-    <h1>Beer League @seasonStr()</h1>
-    <h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a></h4>
-    <table>
-        <tr class="top">
-            <th><a href="@sortLink("name")">Player</a></th>
-            <th><a href="@sortLink("winrate")">Win/Loss</a></th>
-            <th><a href="@sortLink("kills")">Kills</a></th>
-            <th><a href="@sortLink("deaths")">Deaths</a></th>
-            <th><a href="@sortLink("assists")">Assists</a></th>
-            <th><a href="@sortLink("role")">Main Role</a></th>
-        </tr>
-        @foreach (var player in AllPlayersStats)
-        {
-            var name = player.Key.Split("#");
-            var stats = player.Value;
-            var role = Utility.roleShort(stats.primaryRole);
-            <tr>
-                <td class="player"><a href="../Player/@name[0]">@name[0]</a></td>
-                <td class="winrate">@stats.winrate()%</td>
-                <td class="kills">@stats.kills</td>
-                <td class="deaths">@stats.deaths</td>
-                <td class="assists">@stats.assists</td>
-                <td class="role"><img src="/assets/roles/@(role).webp" title="@stats.primaryRole" /></td>
-            </tr>
-        }
-    </table>
+   <h1>Beer League @seasonStr()</h1>
+   <h4>Season: <a href="/players/all">All</a> - <a href="/players/10">10</a></h4>
+   
+   <div class="stat-tabs">
+       <div class="tab-buttons">
+           <a href="@tabLink("core")" class="@(activeTab == "core" ? "active" : "")">Core Stats</a>
+           <a href="@tabLink("carry")" class="@(activeTab == "carry" ? "active" : "")">Carry Stats</a>
+           <a href="@tabLink("objectives")" class="@(activeTab == "objectives" ? "active" : "")">Objectives</a>
+           <a href="@tabLink("utility")" class="@(activeTab == "utility" ? "active" : "")">Utility</a>
+           <a href="@tabLink("fun")" class="@(activeTab == "fun" ? "active" : "")">Fun Stats</a>
+       </div>
+
+       <table>
+           <tr class="top">
+               <th><a href="@sortLink("name")">Player</a></th>
+               @switch (activeTab)
+               {
+                    case "core":
+                        <th><a href="@sortLink("winrate")">Win Rate</a></th>
+                        <th><a href="@sortLink("win")">Wins</a></th>
+                        <th><a href="@sortLink("loss")">Losses</a></th>
+                        <th><a href="@sortLink("role")">Main Role</a></th>
+                        <th><a href="@sortLink("killsPerMin")">Kills/Min</a></th>
+                        <th><a href="@sortLink("killsPerGame")">Kills/Game</a></th>
+                        <th><a href="@sortLink("kills")">Total Kills</a></th>
+                        <th><a href="@sortLink("deathsPerMin")">Deaths/Min</a></th>
+                        <th><a href="@sortLink("deathsPerGame")">Deaths/Game</a></th>
+                        <th><a href="@sortLink("deaths")">Total Deaths</a></th>
+                        <th><a href="@sortLink("assistsPerMin")">Assists/Min</a></th>
+                        <th><a href="@sortLink("assistsPerGame")">Assists/Game</a></th>
+                        <th><a href="@sortLink("assists")">Total Assists</a></th>
+                        <th><a href="@sortLink("kda")">KDA</a></th>
+                        <th><a href="@sortLink("largestKillingSpree")">Best Spree</a></th>
+                        <th><a href="@sortLink("doubleKills")">Double Kills</a></th>
+                        <th><a href="@sortLink("tripleKills")">Triple Kills</a></th>
+                        <th><a href="@sortLink("quadraKills")">Quadra Kills</a></th>
+                        <th><a href="@sortLink("pentaKills")">Penta Kills</a></th>
+                        break;
+
+                    case "carry":
+                        <th><a href="@sortLink("DamageDealtToChampionsPerMinute")">Damage/Min</a></th>
+                        <th><a href="@sortLink("DamageDealtToChampionsPerGame")">Damage/Game</a></th>
+                        <th><a href="@sortLink("totalDamageDealtToChampions")">Total Damage</a></th>
+                        <th><a href="@sortLink("DamageMitigatedPerGame")">Mitigated/Game</a></th>
+                        <th><a href="@sortLink("damageSelfMitigated")">Total Mitigated</a></th>
+                        <th><a href="@sortLink("TotalFirstBloods")">First Bloods</a></th>
+                        <th><a href="@sortLink("MinionsPerMinute")">CS/Min</a></th>
+                        <th><a href="@sortLink("MinionsPerGame")">CS/Game</a></th>
+                        <th><a href="@sortLink("totalMinionsKilled")">Total CS</a></th>
+                        <th><a href="@sortLink("KillsNearTurretPerGame")">Dives/Game</a></th>
+                        <th><a href="@sortLink("killsNearEnemyTurret")">Total Dives</a></th>
+                        <th><a href="@sortLink("maxCsAdvantageOnLaneOpponent")">Best CS Lead</a></th>
+                        <th><a href="@sortLink("teamDamagePercentage")">Team Damage %</a></th>
+                        <th><a href="@sortLink("soloKills")">Solo Kills</a></th>
+                        break;
+
+                    case "objectives":
+                        <th><a href="@sortLink("BuildingDamagePerMinute")">Building Dmg/Min</a></th>
+                        <th><a href="@sortLink("BuildingDamagePerGame")">Building Dmg/Game</a></th>
+                        <th><a href="@sortLink("damageDealtToBuildings")">Total Building Dmg</a></th>
+                        <th><a href="@sortLink("TurretTakedownsPerGame")">Turrets/Game</a></th>
+                        <th><a href="@sortLink("turretTakedowns")">Total Turrets</a></th>
+                        <th><a href="@sortLink("inhibitorTakedowns")">Total Inhibs</a></th>
+                        <th><a href="@sortLink("ObjectivesStolenPerGame")">Steals/Game</a></th>
+                        <th><a href="@sortLink("objectivesStolen")">Total Steals</a></th>
+                        <th><a href="@sortLink("TurretPlatesPerGame")">Plates/Game</a></th>
+                        <th><a href="@sortLink("turretPlatesTaken")">Total Plates</a></th>
+                        <th><a href="@sortLink("BaronKillsPerGame")">Barons/Game</a></th>
+                        <th><a href="@sortLink("baronKills")">Total Barons</a></th>
+                        break;
+
+                    case "utility":
+                        <th><a href="@sortLink("VisionScorePerMinute")">Vision/Min</a></th>
+                        <th><a href="@sortLink("visionScorePerGame")">Vision/Game</a></th>
+                        <th><a href="@sortLink("visionScore")">Total Vision</a></th>
+                        <th><a href="@sortLink("WardsPerMinute")">Wards/Min</a></th>
+                        <th><a href="@sortLink("WardsPerGame")">Wards/Game</a></th>
+                        <th><a href="@sortLink("wardsPlaced")">Total Wards</a></th>
+                        <th><a href="@sortLink("WardsKilledPerGame")">Cleared/Game</a></th>
+                        <th><a href="@sortLink("wardsKilled")">Total Cleared</a></th>
+                        <th><a href="@sortLink("CCTimePerGame")">CC/Game</a></th>
+                        <th><a href="@sortLink("totalTimeCCDealt")">Total CC</a></th>
+                        <th><a href="@sortLink("ShieldingPerGame")">Shield/Game</a></th>
+                        <th><a href="@sortLink("totalDamageShieldedOnTeammates")">Total Shield</a></th>
+                        <th><a href="@sortLink("HealingPerGame")">Healing/Game</a></th>
+                        <th><a href="@sortLink("totalHealsOnTeammates")">Total Healing</a></th>
+                        break;
+
+                   case "fun":
+                        <th><a href="@sortLink("SpellCastsPerMinute")">Spells/Min</a></th>
+                        <th><a href="@sortLink("SpellCastsPerGame")">Spells/Game</a></th>
+                        <th><a href="@sortLink("totalSpellCasts")">Total Spells</a></th>
+                        <th><a href="@sortLink("fistBumpParticipation")">Fist Bumps</a></th>
+                        <th><a href="@sortLink("flawlessAces")">Flawless Aces</a></th>
+                        <th><a href="@sortLink("skillshotsDodged")">Skillshots Dodged</a></th>
+                        <th><a href="@sortLink("skillshotsHit")">Skillshots Hit</a></th>
+                        <th><a href="@sortLink("takedownsInAlcove")">Alcove Kills</a></th>
+                        break;
+               }
+           </tr>
+
+           @foreach (var player in AllPlayersStats)
+           {
+               var name = player.Key.Split("#");
+               var stats = player.Value;
+               <tr>
+                   <td class="player"><a href="../Player/@name[0]">@name[0]</a></td>
+                   @switch (activeTab)
+                   {
+                        case "core":
+                            <td class="winrate">@(stats.WinRate.ToString("F1"))%</td>
+                            <td class="number">@stats.win</td>
+                            <td class="number">@stats.loss</td>
+                            <td class="role"><img src="/assets/roles/@(Utility.roleShort(stats.primaryRole)).webp" title="@stats.primaryRole" /></td>
+                            <td class="number">@stats.GetKillsPerMinute().ToString("F2")</td>
+                            <td class="number">@stats.GetKillsPerGame().ToString("F1")</td>
+                            <td class="number">@stats.kills</td>
+                            <td class="number">@stats.GetDeathsPerMinute().ToString("F2")</td>
+                            <td class="number">@stats.GetDeathsPerGame().ToString("F1")</td>
+                            <td class="number">@stats.deaths</td>
+                            <td class="number">@stats.GetAssistsPerMinute().ToString("F2")</td>
+                            <td class="number">@stats.GetAssistsPerGame().ToString("F1")</td>
+                            <td class="number">@stats.assists</td>
+                            <td class="number">@stats.GetKDA().ToString("F1")</td>
+                            <td class="number">@stats.largestKillingSpree</td>
+                            <td class="number">@stats.doubleKills</td>
+                            <td class="number">@stats.tripleKills</td>
+                            <td class="number">@stats.quadraKills</td>
+                            <td class="number">@stats.pentaKills</td>
+                            break;
+
+                        case "carry":
+                            <td class="number">@stats.DamageDealtToChampionsPerMinute.ToString("F1")</td>
+                            <td class="number">@stats.DamageDealtToChampionsPerGame.ToString("N0")</td>
+                            <td class="number">@stats.totalDamageDealtToChampions.ToString("N0")</td>
+                            <td class="number">@stats.DamageMitigatedPerGame.ToString("N0")</td>
+                            <td class="number">@stats.damageSelfMitigated.ToString("N0")</td>
+                            <td class="number">@stats.TotalFirstBloods</td>
+                            <td class="number">@stats.MinionsPerMinute.ToString("F1")</td>
+                            <td class="number">@stats.MinionsPerGame.ToString("F1")</td>
+                            <td class="number">@stats.totalMinionsKilled</td>
+                            <td class="number">@stats.KillsNearTurretPerGame.ToString("F1")</td>
+                            <td class="number">@stats.killsNearEnemyTurret</td>
+                            <td class="number">@stats.maxCsAdvantageOnLaneOpponent.ToString("F1")</td>
+                            <td class="number">@(stats.teamDamagePercentage.ToString("P1"))</td>
+                            <td class="number">@stats.soloKills</td>
+                            break;
+
+                        case "objectives":
+                            <td class="number">@stats.BuildingDamagePerMinute.ToString("F1")</td>
+                            <td class="number">@stats.BuildingDamagePerGame.ToString("N0")</td>
+                            <td class="number">@stats.damageDealtToBuildings.ToString("N0")</td>
+                            <td class="number">@stats.TurretTakedownsPerGame.ToString("F1")</td>
+                            <td class="number">@stats.turretTakedowns</td>
+                            <td class="number">@stats.inhibitorTakedowns</td>
+                            <td class="number">@stats.ObjectivesStolenPerGame.ToString("F2")</td>
+                            <td class="number">@stats.objectivesStolen</td>
+                            <td class="number">@stats.TurretPlatesPerGame.ToString("F1")</td>
+                            <td class="number">@stats.turretPlatesTaken</td>
+                            <td class="number">@stats.BaronKillsPerGame.ToString("F2")</td>
+                            <td class="number">@stats.baronKills</td>
+                            break;
+
+                        case "utility":
+                            <td class="number">@stats.VisionScorePerMinute.ToString("F1")</td>
+                            <td class="number">@stats.VisionScorePerGame.ToString("F1")</td>
+                            <td class="number">@stats.visionScore</td>
+                            <td class="number">@stats.WardsPerMinute.ToString("F1")</td>
+                            <td class="number">@stats.WardsPerGame.ToString("F1")</td>
+                            <td class="number">@stats.wardsPlaced</td>
+                            <td class="number">@stats.WardsKilledPerGame.ToString("F1")</td>
+                            <td class="number">@stats.wardsKilled</td>
+                            <td class="number">@stats.CCTimePerGame.ToString("F1")</td>
+                            <td class="number">@stats.totalTimeCCDealt.ToString("F1")</td>
+                            <td class="number">@stats.ShieldingPerGame.ToString("N0")</td>
+                            <td class="number">@stats.totalDamageShieldedOnTeammates.ToString("N0")</td>
+                            <td class="number">@stats.HealingPerGame.ToString("N0")</td>
+                            <td class="number">@stats.totalHealsOnTeammates.ToString("N0")</td>
+                            break;
+
+                       case "fun":
+                           <td class="number">@stats.SpellCastsPerMinute.ToString("F1")</td>
+                           <td class="number">@stats.SpellCastsPerGame.ToString("F1")</td>
+                           <td class="number">@stats.totalSpellCasts</td>
+                           <td class="number">@stats.fistBumpParticipation</td>
+                           <td class="number">@stats.flawlessAces</td>
+                           <td class="number">@stats.skillshotsDodged</td>
+                           <td class="number">@stats.skillshotsHit</td>
+                           <td class="number">@stats.takedownsInAlcove</td>
+                           break;
+                   }
+               </tr>
+           }
+       </table>
+   </div>
 }
+
+
 
 
 @code {
     [Parameter]
     public string? sort { get; set; }
-
     [Parameter]
     public string? season { get; set; }
-
     private string? order { get; set; }
-
-    private List<string> PlayersSorted = new();
-    private List<List<string>> AllPlayers = new();
+    private string activeTab = "core";
     private List<KeyValuePair<string, PlayerData>> AllPlayersStats = new();
-
     private string status = "loading";
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? tab { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Run(init);
+        await Task.Run(InitializeData);
     }
 
-    private void init()
+    private void InitializeData()
     {
         sort = sort ?? "name";
         season = season ?? "all";
+        activeTab = tab ?? "core";
 
         if (sort.Contains("-"))
         {
-            var sortparams = sort.Split("-");
-            sort = sortparams[0];
-            order = sortparams[1];
+            var sortParams = sort.Split("-");
+            sort = sortParams[0];
+            order = sortParams[1];
         }
 
-        AllPlayers = Database.dbquery("SELECT puuid, name FROM Players");
-        foreach (var player in AllPlayers)
+        // Load player data
+        var allPlayers = Database.dbquery("SELECT puuid, name FROM Players");
+        foreach (var player in allPlayers)
         {
             var puuid = player[0];
             var name = player[1];
@@ -82,51 +256,114 @@
             AllPlayersStats.Add(new KeyValuePair<string, PlayerData>(name, playerOverallStats));
         }
 
-        if (order == null || order == "asc") // ascending order
-        {
-            if (sort == "name") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Key).ToList(); }
-            else if (sort == "winrate") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.winrate()).ToList(); }
-            else if (sort == "kills") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.kills).ToList(); }
-            else if (sort == "deaths") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.deaths).ToList(); }
-            else if (sort == "assists") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.assists).ToList(); }
-            else if (sort == "role") { AllPlayersStats = AllPlayersStats.OrderBy(pair => pair.Value.primaryRole).ToList(); }
-        }
-        else // descending order
-        {
-            if (sort == "name") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Key).ToList(); }
-            else if (sort == "winrate") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.winrate()).ToList(); }
-            else if (sort == "kills") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.kills).ToList(); }
-            else if (sort == "deaths") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.deaths).ToList(); }
-            else if (sort == "assists") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.assists).ToList(); }
-            else if (sort == "role") { AllPlayersStats = AllPlayersStats.OrderByDescending(pair => pair.Value.primaryRole).ToList(); }
-        }
+        // Sort player stats based on sort order
+        AllPlayersStats = GetSortedStats(order == null || order == "asc");
 
         status = "done";
     }
 
-    private string sortLink (string header)
+    private static readonly Dictionary<string, string> ColumnToPropertyMap = new Dictionary<string, string>
     {
-        string returnval = $"/Players/{season}/{header}-";
-        if (header == sort)
-        {
-            if (order == "asc") { return returnval + "desc"; } else { return returnval + "asc"; }
-        } else
-        {
-            if (new string[] { "name", "role" }.Contains(header))
-            {
-                return returnval + "asc";
-            } else { return returnval + "desc"; }
-        }
+         {"killsPerMin", "GetKillsPerMinute"},
+         {"killsPerGame", "GetKillsPerGame"},
+         {"deathsPerMin", "GetDeathsPerMinute"},
+         {"deathsPerGame", "GetDeathsPerGame"},
+         {"assistsPerMin", "GetAssistsPerMinute"},
+         {"assistsPerGame", "GetAssistsPerGame"},
+         {"kda", "GetKDA"}
+
+        // not needed
+        // { "Win Rate", "winrate" },
+        // { "Wins", "win" },
+        // { "Losses", "loss" },
+        // { "Main Role", "role" },
+        // { "Kills/Min", "killsPerMin" },
+        // { "Kills/Game", "killsPerGame" },
+        // { "Total Kills", "kills" },
+        // { "Deaths/Min", "deathsPerMin" },
+        // { "Deaths/Game", "deathsPerGame" },
+        // { "Total Deaths", "deaths" },
+        // { "Assists/Min", "assistsPerMin" },
+        // { "Assists/Game", "assistsPerGame" },
+        // { "Total Assists", "assists" },
+        // { "KDA", "kda" },
+        // { "Best Spree", "largestKillingSpree" },
+        // { "Double Kills", "doubleKills" },
+        // { "Triple Kills", "tripleKills" },
+        // { "Quadra Kills", "quadraKills" },
+        // { "Penta Kills", "pentaKills" },
+        // { "Damage/Min", "DamageDealtToChampionsPerMinute" },
+        // { "Damage/Game", "DamageDealtToChampionsPerGame" },
+        // { "Total Damage", "totalDamageDealtToChampions" },
+        // { "Mitigated/Game", "DamageMitigatedPerGame" },
+        // { "Total Mitigated", "damageSelfMitigated" },
+        // { "First Bloods", "TotalFirstBloods" },
+        // { "CS/Min", "MinionsPerMinute" },
+        // { "CS/Game", "MinionsPerGame" },
+        // { "Total CS", "totalMinionsKilled" },
+        // { "Dives/Game", "KillsNearTurretPerGame" },
+        // { "Total Dives", "killsNearEnemyTurret" },
+        // { "Best CS Lead", "maxCsAdvantageOnLaneOpponent" },
+        // { "Team Damage %", "teamDamagePercentage" },
+        // { "Solo Kills", "soloKills" },
+        // { "Building Dmg/Min", "BuildingDamagePerMinute" },
+        // { "Building Dmg/Game", "BuildingDamagePerGame" },
+        // { "Total Building Dmg", "damageDealtToBuildings" },
+        // { "Turrets/Game", "TurretTakedownsPerGame" },
+        // { "Total Turrets", "turretTakedowns" },
+        // { "Total Inhibs", "inhibitorTakedowns" },
+        // { "Steals/Game", "ObjectivesStolenPerGame" },
+        // { "Total Steals", "objectivesStolen" },
+        // { "Plates/Game", "TurretPlatesPerGame" },
+        // { "Total Plates", "turretPlatesTaken" },
+        // { "Barons/Game", "BaronKillsPerGame" },
+        // { "Total Barons", "baronKills" },
+        // { "Vision/Min", "visionScorePerMin" },
+        // { "Vision/Game", "visionScorePerGame" },
+        // { "Total Vision", "totalVisionScore" },
+        // { "Wards/Min", "WardsPerMinute" },
+        // { "Wards/Game", "WardsPerGame" },
+        // { "Total Wards", "wardsPlaced" },
+        // { "Cleared/Game", "WardsKilledPerGame" },
+        // { "Total Cleared", "wardsKilled" },
+        // { "CC/Game", "CCTimePerGame" },
+        // { "Total CC", "totalTimeCCDealt" },
+        // { "Shield/Game", "ShieldingPerGame" },
+        // { "Total Shield", "totalDamageShieldedOnTeammates" },
+        // { "Healing/Game", "HealingPerGame" },
+        // { "Total Healing", "totalHealsOnTeammates" },
+        // { "Spells/Min", "SpellCastsPerMinute" },
+        // { "Spells/Game", "SpellCastsPerGame" },
+        // { "Total Spells", "totalSpellCasts" },
+        // { "Fist Bumps", "fistBumpParticipation" },
+        // { "Flawless Aces", "flawlessAces" },
+        // { "Skillshots Dodged", "skillshotsDodged" },
+        // { "Skillshots Hit", "skillshotsHit" },
+        // { "Alcove Kills", "takedownsInAlcove" }
+    };
+
+    private List<KeyValuePair<string, PlayerData>> GetSortedStats(bool ascending)
+    {
+        string propertyName = ColumnToPropertyMap.TryGetValue(sort, out var mappedName) ? mappedName : sort;
+        return ascending
+            ? AllPlayersStats.OrderByDynamic(propertyName).ToList()
+            : AllPlayersStats.OrderByDescendingDynamic(propertyName).ToList();
+    }
+
+    private string sortLink(string header)
+    {
+        string returnVal = $"/Players/{season}/{header}-";
+        returnVal += (header == sort && order == "asc") ? "desc" : "asc";
+        return returnVal + $"?tab={activeTab}";
     }
 
     private string seasonStr()
     {
-        if (season == "all")
-        {
-            return "All Seasons";
-        } else
-        {
-            return "Season " + season;
-        }
+        return season == "all" ? "All Seasons" : "Season " + season;
+    }
+
+    private string tabLink(string tab)
+    {
+        return $"/Players/{season}/{sort}?tab={tab}";
     }
 }
